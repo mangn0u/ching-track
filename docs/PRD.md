@@ -2,10 +2,9 @@
 ## Personal Finance Tracker — 2-Week MVP
 
 **Version:** 1.0  
-**Owner:** Emang  
-**Timeline:** 2 weeks (≈60 hours @ 4hrs/day, 15 days)  
-**Stack:** React + Tailwind CSS (frontend) · Django + PostgreSQL (backend)  
-**Deployment Target:** Localhost (Week 1) → Railway/Render (Week 2, Day 13)
+**Owner:** Mang'nu
+**Timeline:** 2 weeks (≈60 hours @ 4hrs/day, 15 days)  **Stack:** React + Tailwind CSS (frontend) · Django + PostgreSQL (backend)  
+**Deployment Target:** Localhost (Week 1) → Railway (Django) + Vercel (React + Tailwind) (Week 2, Day 13)
 
 ---
 
@@ -13,7 +12,7 @@
 
 ### Why Does This Exist?
 
-Adults operating without a system for tracking income, spending, and savings goals consistently make decisions in an information vacuum. The result is lifestyle inflation, surprise bills, and savings that never compound. The problem is not willpower — it is architecture. You need a single source of truth that shows you where money is going in real time.
+We live in a world where most of us operate without a system for tracking income, spending, and savings goals consistently make decisions in an information vacuum. The result is lifestyle inflation, surprise bills, and savings that never compound. The problem is not willpower — it is architecture. You need a single source of truth that shows you where money is going in real time.
 
 ### What Problem Does It Solve?
 
@@ -27,9 +26,9 @@ Adults operating without a system for tracking income, spending, and savings goa
 ### Constraints That Shape This Solution
 
 - **Solo builder, 4hrs/day** → No microservices. One Django app, one React SPA.
-- **Beginner web dev** → No complex state libraries (no Redux). React `useState` + Context + `fetch`.
-- **No external APIs** → No bank connections (Plaid is Week 6+). Manual entry only.
-- **No auth complexity** → Single user, session-based auth (Django's built-in). No OAuth.
+- **No external APIs in MVP** → No bank connections. Manual entry only. M-Pesa SMS parsing is v2.
+- **Multi-currency** → Store `currency_code` per transaction from Day 1. No conversion in MVP.
+- **Target scale** → 1,000 users. User data fully isolated (row-level scoping on every query).
 
 ---
 
@@ -39,13 +38,16 @@ Adults operating without a system for tracking income, spending, and savings goa
 
 ### ✅ In Scope
 
-1. **Authentication** — register, login, logout (Django session auth)
+1. **Authentication** — register (email verification), login, logout, password reset (JWT via SimpleJWT)
 2. **Transaction Management** — create, read, update, delete income + expense transactions
 3. **Category System** — predefined categories + user can add custom ones
 4. **Budget Planner** — set a monthly spend limit per category; see actual vs budget
-5. **Savings Goals** — create a goal with a target amount + deadline; log contributions
-6. **Bill Tracker** — log recurring bills with due dates; mark as paid
-7. **Dashboard** — monthly summary: total income, total expenses, net, category breakdown (bar chart)
+5. **Savings Goals** — create a goal with a target amount + deadline; log contributions; on-track indicator
+6. **Global Spending Limit** — set a single monthly spend ceiling (e.g. KES 80,000); see how much remains
+7. **User Preferences** — preferred currency, monthly spending limit, profile settings
+8. **Bill Tracker** — log recurring bills with due dates; mark as paid
+9. **Dashboard** — monthly summary: income, expenses, net, savings rate, category breakdown, month-over-month
+10. **Data Privacy** — GDPR-style: full data export (JSON) + account deletion
 
 ### ❌ Out of Scope (Not in 2 Weeks)
 
@@ -192,10 +194,17 @@ class GoalContribution(models.Model):
 
 | Method | Endpoint | Description |
 |---|---|---|
-| POST | `/api/v1/auth/register/` | Create account |
-| POST | `/api/v1/auth/login/` | Login, set session |
-| POST | `/api/v1/auth/logout/` | Destroy session |
-| GET | `/api/v1/auth/me/` | Current user info |
+| POST | `/api/v1/auth/register/` | Create account, send verification email |
+| GET | `/api/v1/auth/verify-email/<token>/` | Activate account |
+| POST | `/api/v1/auth/login/` | Login → returns `{access, refresh, user}` |
+| POST | `/api/v1/auth/token/refresh/` | Rotate JWT tokens |
+| POST | `/api/v1/auth/logout/` | Blacklist refresh token |
+| GET/PUT | `/api/v1/auth/me/` | View / update profile |
+| POST | `/api/v1/auth/forgot-password/` | Send reset email |
+| POST | `/api/v1/auth/reset-password/<token>/` | Set new password |
+| POST | `/api/v1/auth/change-password/` | Change password (authenticated) |
+| GET | `/api/v1/auth/export-data/` | GDPR: export all user data as JSON |
+| DELETE | `/api/v1/auth/delete-account/` | GDPR: delete account + all data |
 
 ### Transactions
 
@@ -452,4 +461,98 @@ Hour 1: Review yesterday's output. Fix any broken tests or endpoints.
 Hour 2-3: Build the day's deliverable (backend or frontend).
 Hour 4: Test manually. Commit. Write one sentence in your dev log.
 ```
+
+---
+
+## 13. Future Features (Post-MVP Roadmap)
+
+> These are explicitly **out of scope** for the 2-week MVP. They are documented here to ensure the current architecture does not block their future implementation.
+
+### 13.1 AI Financial Advisor
+
+**What:** A conversational assistant that answers questions about the user's finances using their actual transaction data.
+
+**Example interactions:**
+- *"Why did I overspend in March?"* → AI analyses category breakdown
+- *"How much can I safely spend this weekend?"* → AI checks remaining budget + upcoming bills
+- *"Am I on track to hit my savings goal?"* → AI factors in current pace + deadline
+
+**Architecture notes (design for this now):**
+- Keep transaction data structured and queryable — the AI needs clean aggregates, not raw text
+- A `financial_summary` computed view/endpoint will feed context to the LLM
+- Use tool-calling (function calling) pattern: LLM calls internal API functions, not raw SQL
+- Model: Claude or Gemini via API. Wrap in a Django view that assembles context + calls LLM.
+
+**Why not MVP:** Requires LLM API cost, prompt engineering, and a chat UI. Not core to the "log + see" loop.
+
+---
+
+### 13.2 Financial Habit Tracking System
+
+**What:** Tracks behavioral patterns over time — not just numbers, but *how* the user manages money.
+
+**Examples:**
+- "You've logged transactions every day for 14 days" (streak)
+- "You tend to overspend on Fridays" (day-of-week pattern)
+- "Your Food spending increases by 30% in the last week of the month" (pattern detection)
+- "You set budgets but rarely check them mid-month" (engagement insight)
+
+**Architecture notes:**
+- Add a `UserHabit` model: `{user, habit_type, streak_count, last_triggered, metadata_json}`
+- Habits are computed by a background task (Celery + Redis) running nightly
+- Store habit snapshots — don't recompute on every request
+- The AI Advisor (13.1) will use habit data as additional context
+
+**Why not MVP:** Requires background task infrastructure (Celery + Redis) and enough historical data (need 60+ days of user behaviour) to be meaningful.
+
+---
+
+### 13.3 Financial Goal Prediction Engine
+
+**What:** Uses historical contribution pace + spending patterns to predict whether the user will achieve their savings goals by the deadline — and by how much they're off.
+
+**Examples:**
+- "At your current savings rate, you'll reach your Emergency Fund goal 3 months late"
+- "If you cut Entertainment spending by 20%, you'll hit your goal on time"
+- "There is an 82% probability you'll achieve this goal" (probabilistic model)
+
+**Architecture notes:**
+- Start simple: linear extrapolation from current `total_saved` + `days_remaining`
+- Upgrade to: regression model trained on user's own contribution history
+- Final form: Monte Carlo simulation using spending variance + income variance
+- Expose as a computed field `prediction` on the `SavingsGoal` endpoint — the data model is already set
+- The `is_on_track` boolean on MVP SavingsGoal is the seed of this feature
+
+**Why not MVP:** Requires sufficient historical data and a separate ML/stats service. `is_on_track` in the MVP is the v1 of this feature.
+
+---
+
+### 13.4 M-Pesa Integration (Daraja API / SMS Parsing)
+
+**What:** Automatically import M-Pesa transactions instead of manual entry.
+
+**Two approaches:**
+- **SMS Parsing (v2):** User pastes or forwards M-Pesa SMS → regex extracts `{amount, ref, type, counterparty}` → auto-creates Transaction. No business account needed.
+- **Daraja API (v3):** Real-time webhook from Safaricom. Requires registered business/paybill. For when this becomes a SaaS product.
+
+**Architecture notes (already prepared in MVP):**
+- `Transaction.mpesa_ref` and `Transaction.mpesa_raw_sms` fields added in Week 1
+- `CustomUser.mpesa_phone` field added in Week 1
+- A future `POST /api/v1/mpesa/parse-sms/` endpoint will accept raw SMS text and return a pre-filled Transaction object for user confirmation before saving
+
+**Why not MVP:** Parsing accuracy requires testing across all M-Pesa SMS formats (send, receive, buy goods, pay bill, withdraw). Not suitable for a 2-week build.
+
+---
+
+### 13.5 Other Deferred Features
+
+| Feature | Notes |
+|---|---|
+| Shared budgets (couples/roommates) | Needs multi-user auth, invite system, permission model |
+| Mobile app (React Native / Flutter) | JWT auth is already mobile-ready. Add push notifications. |
+| PDF / CSV export | Add after data export (GDPR endpoint) is proven |
+| Investment tracking | New asset class. Separate `Portfolio` + `AssetHolding` models. |
+| Tax reporting (KRA) | Requires understanding of Kenya tax brackets. Post-product-market fit. |
+| Multi-device offline sync | PWA + IndexedDB + sync protocol. Major complexity. |
+| Recurring transaction auto-creation | Celery beat task. Simple to add once background tasks exist. |
 
