@@ -4,7 +4,7 @@ from django.conf import settings
 from django.contrib.auth import authenticate
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
-from rest_framework import generics, status, permissions
+from rest_framework import generics, status, permissions, serializers
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -25,7 +25,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
         if not self.user.is_email_verified:
-            raise Response({"error": "Your email address is not verified yet."}, status=status.HTTP_400_BAD_REQUEST)
+            raise serializers.ValidationError({"error": "Your email address is not verified yet."})
         
         data["user"] = UserProfileSerializer(self.user).data
         return data
