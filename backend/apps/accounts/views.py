@@ -1,5 +1,6 @@
 """Accounts views — register, login, logout, verify, reset password."""
 
+from os import name
 from django.conf import settings
 from django.contrib.auth import authenticate
 from django.core.mail import send_mail
@@ -17,10 +18,13 @@ from apps.accounts.serializers import (
     UserProfileSerializer,
     ChangePasswordSerializer,
 )
+from django.utils.decorators import method_decorator
+from django_ratelimit.decorators import ratelimit
 
 # ------------------------------------------------------------------------------
 # Login with Email Verification Check
 # ------------------------------------------------------------------------------
+@ratelimit(ratelimit(key="ip", rate="5/m", block=True), name="post")
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
