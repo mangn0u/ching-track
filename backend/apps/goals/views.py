@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from apps.goals.models import SavingsGoal, GoalContribution
 from apps.goals.serializers import SavingsGoalSerializer, GoalContributionSerializer
 
-class GoalListCreateView(generics.ListCreateView):
+class GoalListCreateView(generics.ListCreateAPIView):
     """
     GET /api/v1/goals/
     POST /api/v1/goals/

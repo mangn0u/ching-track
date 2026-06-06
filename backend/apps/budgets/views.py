@@ -92,7 +92,7 @@ class SpendingStatusView(APIView):
 # ------------------------------------------------------------------------------
 # Budget Views
 # ------------------------------------------------------------------------------
-class BudgetListCreateView(generics.ListCreateView):
+class BudgetListCreateView(generics.ListCreateAPIView):
     """
     GET /api/v1/budgets/
     POST /api/v1/budgets/

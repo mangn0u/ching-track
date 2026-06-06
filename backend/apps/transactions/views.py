@@ -16,7 +16,7 @@ from apps.transactions.serializers import (
 # ------------------------------------------------------------------------------
 # Category Views
 # ------------------------------------------------------------------------------
-class CategoryListCreateView(generics.ListCreateView):
+class CategoryListCreateView(generics.ListCreateAPIView):
     """
     GET /api/v1/categories/
     POST /api/v1/categories/
@@ -76,7 +76,7 @@ class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
 # ------------------------------------------------------------------------------
 # Transaction Views
 # ------------------------------------------------------------------------------
-class TransactionListCreateView(generics.ListCreateView):
+class TransactionListCreateView(generics.ListCreateAPIView):
     """
     GET /api/v1/transactions/
     POST /api/v1/transactions/

@@ -9,7 +9,7 @@ from apps.bills.models import Bill, BillPayment
 from apps.transactions.models import Transaction, Category
 from apps.bills.serializers import BillSerializer, BillPaymentSerializer
 
-class BillListCreateView(generics.ListCreateView):
+class BillListCreateView(generics.ListCreateAPIView):
     """
     GET /api/v1/bills/
     POST /api/v1/bills/

@@ -1,6 +1,5 @@
 """Accounts views — register, login, logout, verify, reset password."""
 
-from os import name
 from django.conf import settings
 from django.contrib.auth import authenticate
 from django.core.mail import send_mail
@@ -24,17 +23,17 @@ from django_ratelimit.decorators import ratelimit
 # ------------------------------------------------------------------------------
 # Login with Email Verification Check
 # ------------------------------------------------------------------------------
-@ratelimit(ratelimit(key="ip", rate="5/m", block=True), name="post")
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
         if not self.user.is_email_verified:
             raise serializers.ValidationError({"error": "Your email address is not verified yet."})
-        
+
         data["user"] = UserProfileSerializer(self.user).data
         return data
 
 
+@method_decorator(ratelimit(key="ip", rate="5/m", block=True), name="dispatch")
 class LoginView(TokenObtainPairView):
     """
     POST /api/v1/auth/login/
