@@ -107,7 +107,7 @@ TEMPLATES = [
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "chingtrack",
+        "NAME": config("DB_NAME", default="chingtrack"),
         "USER": config("DB_USER", default="chingtrack_user"),
         "PASSWORD": config("DB_PASSWORD", default="chingtrack_pass"),
         "HOST": config("DB_HOST", default="localhost"),
