@@ -65,15 +65,23 @@ env.bak/
 venv.bak/
 
 # ------------------------------------------------------------------------------
+# 5. JavaScript / Frontend (Vite + React)
 # ------------------------------------------------------------------------------
 # Dependencies
 node_modules/
 jspm_packages/
 
 # Production build artifacts
-/dist
-/out
-/build
+dist/
+dist-ssr/
+out/
+build/
+
+# Vite cache
+.vite/
+
+# TypeScript incremental builds
+*.tsbuildinfo
 
 # Logs
 npm-debug.log*
@@ -81,10 +89,18 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+*.log
+
+# Lock files — keep only pnpm-lock.yaml
+package-lock.json
+yarn.lock
 
 # Editor/Lint caches
 .eslintcache
 .stylelintcache
+
+# Local env overrides (frontend)
+*.local
 
 # ------------------------------------------------------------------------------
 # 6. IDEs, Editors, and OS-specific files
