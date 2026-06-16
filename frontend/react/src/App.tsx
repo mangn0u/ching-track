@@ -4,6 +4,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Layout from "./components/Layout";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
+import Transactions from "./pages/Transactions";
 import "./App.css";
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
           <Route element={<ProtectedRoute />}>
             <Route element={<Layout />}>
               <Route index element={<Dashboard />} />
+              <Route path="transactions" element={<Transactions />} />
             </Route>
           </Route>
         </Routes>

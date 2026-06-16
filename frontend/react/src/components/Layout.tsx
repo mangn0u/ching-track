@@ -1,4 +1,4 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, NavLink } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 export default function Layout() {
@@ -14,26 +14,26 @@ export default function Layout() {
           <h1 className="sidebar-logo">ChingTrack</h1>
         </div>
         <nav className="sidebar-nav">
-          <a href="/" className="nav-item active">
+          <NavLink to="/" end className={({ isActive }) => `nav-item${isActive ? " active" : ""}`}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
             Dashboard
-          </a>
-          <a href="/" className="nav-item">
+          </NavLink>
+          <NavLink to="/transactions" className={({ isActive }) => `nav-item${isActive ? " active" : ""}`}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
             Transactions
-          </a>
-          <a href="/" className="nav-item">
+          </NavLink>
+          <NavLink to="/budgets" className={({ isActive }) => `nav-item${isActive ? " active" : ""}`}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>
             Budgets
-          </a>
-          <a href="/" className="nav-item">
+          </NavLink>
+          <NavLink to="/bills" className={({ isActive }) => `nav-item${isActive ? " active" : ""}`}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
             Bills
-          </a>
-          <a href="/" className="nav-item">
+          </NavLink>
+          <NavLink to="/goals" className={({ isActive }) => `nav-item${isActive ? " active" : ""}`}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
             Goals
-          </a>
+          </NavLink>
         </nav>
         <div className="sidebar-footer">
           <div className="sidebar-user">

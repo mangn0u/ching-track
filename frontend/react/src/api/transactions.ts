@@ -1,0 +1,43 @@
+import { apiFetch, apiPost, apiPut, apiDelete } from "./client";
+import type { Transaction, TransactionFormData, TransactionFilters, TransactionSummary, Category } from "../types/transaction";
+
+export function fetchCategories(type?: string): Promise<Category[]> {
+  const qs = type ? `?type=${type}` : "";
+  return apiFetch<Category[]>(`/api/v1/categories/${qs}`);
+}
+
+export function fetchTransactions(filters?: TransactionFilters): Promise<Transaction[]> {
+  const params = new URLSearchParams();
+  if (filters?.month) params.set("month", String(filters.month));
+  if (filters?.year) params.set("year", String(filters.year));
+  if (filters?.type) params.set("type", filters.type);
+  if (filters?.category) params.set("category", String(filters.category));
+  if (filters?.currency) params.set("currency", filters.currency);
+  const qs = params.toString();
+  return apiFetch<Transaction[]>(`/api/v1/transactions/${qs ? `?${qs}` : ""}`);
+}
+
+export function createTransaction(data: TransactionFormData): Promise<Transaction> {
+  return apiPost<Transaction>("/api/v1/transactions/", data);
+}
+
+export function updateTransaction(id: number, data: Partial<TransactionFormData>): Promise<Transaction> {
+  return apiPut<Transaction>(`/api/v1/transactions/${id}/`, data);
+}
+
+export function deleteTransaction(id: number): Promise<void> {
+  return apiDelete<void>(`/api/v1/transactions/${id}/`);
+}
+
+export function fetchTransactionSummary(
+  month?: number,
+  year?: number,
+  currency?: string,
+): Promise<TransactionSummary> {
+  const params = new URLSearchParams();
+  if (month) params.set("month", String(month));
+  if (year) params.set("year", String(year));
+  if (currency) params.set("currency", currency);
+  const qs = params.toString();
+  return apiFetch<TransactionSummary>(`/api/v1/transactions/summary/${qs ? `?${qs}` : ""}`);
+}
