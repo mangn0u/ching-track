@@ -946,6 +946,85 @@
   background: var(--card-border);
 }
 
+/* ========== Budgets Page ========== */
+.budgets-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.budget-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.budget-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color 0.2s;
+}
+
+.budget-card:hover {
+  border-color: var(--accent);
+}
+
+.budget-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.budget-card-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.budget-card-category {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.budget-card-details {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.budget-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.budget-detail-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: var(--text);
+}
+
+.budget-detail-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-h);
+}
+
+.budget-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+  border-top: 1px solid var(--card-border);
+  padding-top: 10px;
+}
+
 /* ========== Responsive ========== */
 @media (max-width: 900px) {
   .dashboard-grid {

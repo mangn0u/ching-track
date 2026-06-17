@@ -5,6 +5,7 @@ import Layout from "./components/Layout";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Transactions from "./pages/Transactions";
+import Budgets from "./pages/Budgets";
 import "./App.css";
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
             <Route element={<Layout />}>
               <Route index element={<Dashboard />} />
               <Route path="transactions" element={<Transactions />} />
+              <Route path="budgets" element={<Budgets />} />
             </Route>
           </Route>
         </Routes>
