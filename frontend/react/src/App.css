@@ -125,6 +125,11 @@
   cursor: not-allowed;
 }
 
+.btn-sm {
+  padding: 8px 16px;
+  font-size: 13px;
+}
+
 /* ========== Layout ========== */
 .app-layout {
   display: flex;
@@ -1038,6 +1043,260 @@
   .category-row {
     grid-template-columns: 100px 1fr 90px;
   }
+}
+
+/* ========== Bills Page ========== */
+.bills-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.bill-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.bill-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: border-color 0.2s;
+}
+
+.bill-card:hover {
+  border-color: var(--accent);
+}
+
+.bill-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.bill-card-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bill-card-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.bill-frequency {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 8px;
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--blue);
+}
+
+.frequency-weekly {
+  background: rgba(139, 92, 246, 0.1);
+  color: var(--purple);
+}
+
+.frequency-once {
+  background: rgba(245, 158, 11, 0.1);
+  color: var(--orange);
+}
+
+.bill-card-amount {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-h);
+}
+
+.bill-card-details {
+  display: flex;
+  gap: 24px;
+}
+
+.bill-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bill-detail-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: var(--text);
+}
+
+.bill-detail-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.bill-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--card-border);
+  padding-top: 12px;
+}
+
+.bill-card-icon-actions {
+  display: flex;
+  gap: 4px;
+}
+
+/* ========== Goals Page ========== */
+.goals-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.goal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.goal-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color 0.2s;
+}
+
+.goal-card:hover {
+  border-color: var(--accent);
+}
+
+.goal-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.goal-card-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.goal-card-desc {
+  font-size: 13px;
+  color: var(--text);
+  margin: 0;
+}
+
+.goal-card-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.goal-card-stats {
+  display: flex;
+  gap: 16px;
+  justify-content: space-around;
+  padding: 8px 0;
+  border-top: 1px solid var(--card-border);
+}
+
+.goal-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.goal-stat-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-h);
+}
+
+.goal-stat-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: var(--text);
+}
+
+.goal-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--card-border);
+  padding-top: 12px;
+}
+
+.goal-card-icon-actions {
+  display: flex;
+  gap: 4px;
+}
+
+/* Contribution List */
+.contribution-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.contribution-header {
+  display: grid;
+  grid-template-columns: 100px 1fr 1fr;
+  gap: 12px;
+  padding: 8px 0;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text);
+  border-bottom: 1px solid var(--card-border);
+}
+
+.contribution-row {
+  display: grid;
+  grid-template-columns: 100px 1fr 1fr;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--card-border);
+  font-size: 14px;
+  align-items: center;
+}
+
+.contribution-row:last-child {
+  border-bottom: none;
+}
+
+.contribution-date {
+  color: var(--text);
+  font-size: 13px;
+}
+
+.contribution-amount {
+  font-weight: 600;
+  color: var(--green);
+}
+
+.contribution-note {
+  color: var(--text);
+  font-size: 13px;
+}
+
+.modal-lg {
+  max-width: 600px;
 }
 
 @media (max-width: 640px) {

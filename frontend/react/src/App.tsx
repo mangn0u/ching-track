@@ -6,6 +6,8 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Transactions from "./pages/Transactions";
 import Budgets from "./pages/Budgets";
+import Bills from "./pages/Bills";
+import Goals from "./pages/Goals";
 import "./App.css";
 
 function App() {
@@ -19,6 +21,8 @@ function App() {
               <Route index element={<Dashboard />} />
               <Route path="transactions" element={<Transactions />} />
               <Route path="budgets" element={<Budgets />} />
+              <Route path="bills" element={<Bills />} />
+              <Route path="goals" element={<Goals />} />
             </Route>
           </Route>
         </Routes>

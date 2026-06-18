@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { fetchDashboard } from "../api/dashboard";
+import { formatCurrency } from "../utils/format";
 import type { DashboardData } from "../types/dashboard";
 
 export default function Dashboard() {
@@ -7,12 +8,16 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
+  const load = useCallback(() => {
+    setLoading(true);
+    setError("");
     fetchDashboard()
       .then(setData)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => { load(); }, [load]);
 
   if (loading) return <div className="page-loader">Loading dashboard...</div>;
   if (error) return <div className="page-error">{error}</div>;
@@ -199,9 +204,7 @@ function monthName(m: number) {
   return ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][m - 1] || "";
 }
 
-function formatCurrency(amount: number, currency: string) {
-  return new Intl.NumberFormat("en-KE", { style: "currency", currency, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(amount);
-}
+
 
 function SummaryCard({ title, value, currency, change, suffix, color, inverse }: {
   title: string;
