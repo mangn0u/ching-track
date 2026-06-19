@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
@@ -9,6 +9,8 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const message = (location.state as { message?: string } | null)?.message;
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -32,6 +34,7 @@ export default function Login() {
           <p>Sign in to your account</p>
         </div>
         <form onSubmit={handleSubmit} className="login-form">
+          {message && <div className="form-success">{message}</div>}
           {error && <div className="form-error">{error}</div>}
           <div className="form-group">
             <label htmlFor="email">Email</label>
@@ -60,6 +63,9 @@ export default function Login() {
             {loading ? "Signing in..." : "Sign in"}
           </button>
         </form>
+        <p className="login-footer">
+          Don't have an account? <Link to="/register">Create one</Link>
+        </p>
       </div>
     </div>
   );
