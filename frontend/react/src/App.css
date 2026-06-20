@@ -157,6 +157,19 @@
   cursor: not-allowed;
 }
 
+.forgot-link {
+  display: block;
+  text-align: center;
+  font-size: 14px;
+  color: var(--accent);
+  text-decoration: none;
+  margin-top: -8px;
+}
+
+.forgot-link:hover {
+  text-decoration: underline;
+}
+
 .btn-sm {
   padding: 8px 16px;
   font-size: 13px;
@@ -196,6 +209,16 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+}
+
+.nav-section-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--sidebar-text);
+  padding: 16px 12px 6px;
+  opacity: 0.5;
 }
 
 .nav-item {
@@ -691,6 +714,13 @@
   min-height: 60vh;
   font-size: 16px;
   color: var(--red);
+}
+
+.settings-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 640px;
 }
 
 /* ========== Transactions Page ========== */

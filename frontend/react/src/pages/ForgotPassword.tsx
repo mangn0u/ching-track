@@ -1,26 +1,23 @@
 import { useState, type FormEvent } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { Link } from "react-router-dom";
+import { forgotPassword } from "../api/auth";
 
-export default function Login() {
+export default function ForgotPassword() {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const message = (location.state as { message?: string } | null)?.message;
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError("");
+    setSuccess("");
     setLoading(true);
     try {
-      await login(email, password);
-      navigate("/", { replace: true });
+      const res = await forgotPassword({ email });
+      setSuccess(res.message);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
+      setError(err instanceof Error ? err.message : "Request failed");
     } finally {
       setLoading(false);
     }
@@ -31,11 +28,12 @@ export default function Login() {
       <div className="login-card">
         <div className="login-header">
           <h1>ChingTrack</h1>
-          <p>Sign in to your account</p>
+          <p>Reset your password</p>
         </div>
         <form onSubmit={handleSubmit} className="login-form">
-          {message && <div className="form-success">{message}</div>}
           {error && <div className="form-error">{error}</div>}
+          {success && <div className="form-success">{success}</div>}
+
           <div className="form-group">
             <label htmlFor="email">Email</label>
             <input
@@ -48,24 +46,13 @@ export default function Login() {
               autoFocus
             />
           </div>
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              required
-            />
-          </div>
+
           <button type="submit" className="btn-primary" disabled={loading}>
-            {loading ? "Signing in..." : "Sign in"}
+            {loading ? "Sending..." : "Send reset link"}
           </button>
-          <Link to="/forgot-password" className="forgot-link">Forgot password?</Link>
         </form>
         <p className="login-footer">
-          Don't have an account? <Link to="/register">Create one</Link>
+          Remember your password? <Link to="/login">Sign in</Link>
         </p>
       </div>
     </div>

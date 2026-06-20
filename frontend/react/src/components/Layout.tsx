@@ -34,6 +34,11 @@ export default function Layout() {
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
             Goals
           </NavLink>
+          <div className="nav-section-label">Account</div>
+          <NavLink to="/change-password" className={({ isActive }) => `nav-item${isActive ? " active" : ""}`}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Password
+          </NavLink>
         </nav>
         <div className="sidebar-footer">
           <div className="sidebar-user">

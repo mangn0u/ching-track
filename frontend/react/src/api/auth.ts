@@ -47,3 +47,25 @@ export interface RegisterPayload {
 export function register(payload: RegisterPayload): Promise<UserProfile> {
   return apiPost<UserProfile>("/api/v1/auth/register/", payload);
 }
+
+export interface ForgotPasswordPayload {
+  email: string;
+}
+
+export function forgotPassword(payload: ForgotPasswordPayload): Promise<{ message: string }> {
+  return apiPost<{ message: string }>("/api/v1/auth/forgot-password/", payload);
+}
+
+export function resetPassword(token: string, password: string): Promise<{ message: string }> {
+  return apiPost<{ message: string }>(`/api/v1/auth/reset-password/${token}/`, { password });
+}
+
+export interface ChangePasswordPayload {
+  old_password: string;
+  new_password: string;
+  new_password_confirm: string;
+}
+
+export function changePassword(payload: ChangePasswordPayload): Promise<{ message: string }> {
+  return apiPost<{ message: string }>("/api/v1/auth/change-password/", payload);
+}
