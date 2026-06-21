@@ -7,6 +7,7 @@ import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import ChangePassword from "./pages/ChangePassword";
+import Settings from "./pages/Settings";
 import Dashboard from "./pages/Dashboard";
 import Transactions from "./pages/Transactions";
 import Budgets from "./pages/Budgets";
@@ -31,6 +32,7 @@ function App() {
               <Route path="bills" element={<Bills />} />
               <Route path="goals" element={<Goals />} />
               <Route path="change-password" element={<ChangePassword />} />
+              <Route path="settings" element={<Settings />} />
             </Route>
           </Route>
         </Routes>

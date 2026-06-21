@@ -1,4 +1,4 @@
-import { apiFetch, apiPost, setTokens } from "./client";
+import { apiFetch, apiPost, apiPut, apiDelete, setTokens } from "./client";
 
 export interface UserProfile {
   id: number;
@@ -68,4 +68,16 @@ export interface ChangePasswordPayload {
 
 export function changePassword(payload: ChangePasswordPayload): Promise<{ message: string }> {
   return apiPost<{ message: string }>("/api/v1/auth/change-password/", payload);
+}
+
+export function updateProfile(data: Partial<Pick<UserProfile, "first_name" | "last_name" | "phone_number" | "mpesa_phone">>): Promise<UserProfile> {
+  return apiPut<UserProfile>("/api/v1/auth/me/", data);
+}
+
+export function exportData(): Promise<Record<string, unknown>> {
+  return apiFetch<Record<string, unknown>>("/api/v1/auth/export-data/");
+}
+
+export function deleteAccount(): Promise<void> {
+  return apiDelete<void>("/api/v1/auth/delete-account/");
 }
