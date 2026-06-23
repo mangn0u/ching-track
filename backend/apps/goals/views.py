@@ -7,6 +7,7 @@ from rest_framework.response import Response
 
 from apps.goals.models import SavingsGoal, GoalContribution
 from apps.goals.serializers import SavingsGoalSerializer, GoalContributionSerializer
+from core.permissions import IsOwner
 
 class GoalListCreateView(generics.ListCreateAPIView):
     """
@@ -30,7 +31,7 @@ class GoalDetailView(generics.RetrieveUpdateDestroyAPIView):
     Retrieve, edit, or delete a savings goal.
     """
     serializer_class = SavingsGoalSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsOwner]
 
     def get_queryset(self):
         return SavingsGoal.objects.filter(user=self.request.user)

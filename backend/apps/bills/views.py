@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from apps.bills.models import Bill, BillPayment
 from apps.transactions.models import Transaction, Category
 from apps.bills.serializers import BillSerializer, BillPaymentSerializer
+from core.permissions import IsOwner
 
 class BillListCreateView(generics.ListCreateAPIView):
     """
@@ -41,7 +42,7 @@ class BillDetailView(generics.RetrieveUpdateDestroyAPIView):
     Retrieve, edit, or soft-delete a bill.
     """
     serializer_class = BillSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsOwner]
 
     def get_queryset(self):
         return Bill.objects.filter(user=self.request.user)
@@ -80,6 +81,14 @@ class BillPayView(APIView):
         # Create BillPayment
         note = request.data.get("note", f"Automatic payment for {bill.name}")
         amount_paid = request.data.get("amount_paid", bill.amount)
+
+        try:
+            amount_paid = float(amount_paid)
+        except (TypeError, ValueError):
+            return Response({"error": "amount_paid must be a valid number."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if amount_paid <= 0:
+            return Response({"error": "amount_paid must be greater than zero."}, status=status.HTTP_400_BAD_REQUEST)
 
         payment = BillPayment.objects.create(
             bill=bill,

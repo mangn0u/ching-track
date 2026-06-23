@@ -1,5 +1,8 @@
 """Accounts serializers — register, login, profile, password."""
 
+from datetime import timedelta
+
+from django.utils import timezone
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
 from apps.accounts.models import CustomUser, EmailVerificationToken
@@ -27,8 +30,11 @@ class RegisterSerializer(serializers.ModelSerializer):
             phone_number=validated_data.get("phone_number", ""),
             mpesa_phone=validated_data.get("mpesa_phone", None)
         )
-        # Create email verification token
-        token_obj = EmailVerificationToken.objects.create(user=user)
+        # Create email verification token (24-hour expiry)
+        token_obj = EmailVerificationToken.objects.create(
+            user=user,
+            expires_at=timezone.now() + timedelta(hours=24),
+        )
         
         # Send verification email (will print to terminal console in development)
         from django.core.mail import send_mail

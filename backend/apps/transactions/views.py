@@ -12,6 +12,7 @@ from apps.transactions.serializers import (
     TransactionListSerializer,
     TransactionDetailSerializer,
 )
+from core.permissions import IsOwner
 
 # ------------------------------------------------------------------------------
 # Category Views
@@ -43,7 +44,7 @@ class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
     Retrieve, update, or delete a custom category.
     """
     serializer_class = CategorySerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsOwner]
 
     def get_queryset(self):
         return Category.objects.filter(user=self.request.user)
@@ -124,7 +125,7 @@ class TransactionDetailView(generics.RetrieveUpdateDestroyAPIView):
     Retrieve, update, or soft-delete a transaction.
     """
     serializer_class = TransactionDetailSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsOwner]
 
     def get_queryset(self):
         return Transaction.objects.filter(user=self.request.user, is_deleted=False)

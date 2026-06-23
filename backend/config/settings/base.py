@@ -115,6 +115,10 @@ DATABASES = {
     }
 }
 
+# Enforce SSL for database connections in production
+if config("DB_USE_SSL", default=False, cast=bool):
+    DATABASES["default"]["OPTIONS"] = {"sslmode": "require"}
+
 
 # ---------------------------------------------------------------------------
 # Custom User Model

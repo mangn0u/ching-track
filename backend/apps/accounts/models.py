@@ -6,10 +6,12 @@ Adds M-Pesa phone + email verification flag for MVP features.
 """
 
 import uuid
+from datetime import timedelta
 
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.db import models
+from django.utils import timezone
 
 
 class CustomUserManager(BaseUserManager):
@@ -72,6 +74,11 @@ class EmailVerificationToken(models.Model):
     )
     token = models.UUIDField(default=uuid.uuid4, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField(default=timezone.now)
+
+    @property
+    def is_expired(self):
+        return timezone.now() >= self.expires_at
 
     def __str__(self):
         return f"VerificationToken({self.user.email})"
@@ -80,10 +87,17 @@ class EmailVerificationToken(models.Model):
 class PasswordResetToken(models.Model):
     """One-time token for password reset emails."""
 
+    EXPIRY_HOURS = 1
+
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="reset_tokens")
     token = models.UUIDField(default=uuid.uuid4, unique=True)
     is_used = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField(default=timezone.now)
+
+    @property
+    def is_expired(self):
+        return timezone.now() >= self.expires_at
 
     def __str__(self):
         return f"PasswordResetToken({self.user.email})"

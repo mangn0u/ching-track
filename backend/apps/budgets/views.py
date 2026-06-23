@@ -14,6 +14,7 @@ from apps.budgets.serializers import (
     BudgetVsActualSerializer,
     SpendingStatusSerializer,
 )
+from core.permissions import IsOwner
 
 # ------------------------------------------------------------------------------
 # Preferences Views
@@ -145,7 +146,7 @@ class BudgetDetailView(generics.DestroyAPIView):
     Remove a specific budget limit.
     """
     serializer_class = BudgetSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsOwner]
 
     def get_queryset(self):
         return Budget.objects.filter(user=self.request.user)

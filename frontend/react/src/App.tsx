@@ -13,6 +13,7 @@ import Transactions from "./pages/Transactions";
 import Budgets from "./pages/Budgets";
 import Bills from "./pages/Bills";
 import Goals from "./pages/Goals";
+import Categories from "./pages/Categories";
 import "./App.css";
 
 function App() {
@@ -31,6 +32,7 @@ function App() {
               <Route path="budgets" element={<Budgets />} />
               <Route path="bills" element={<Bills />} />
               <Route path="goals" element={<Goals />} />
+              <Route path="categories" element={<Categories />} />
               <Route path="change-password" element={<ChangePassword />} />
               <Route path="settings" element={<Settings />} />
             </Route>

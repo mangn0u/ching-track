@@ -1130,6 +1130,133 @@
   padding-top: 10px;
 }
 
+/* ========== Categories Page ========== */
+.categories-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.category-tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.category-tab {
+  padding: 8px 20px;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  background: var(--input-bg);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.category-tab:hover {
+  border-color: var(--accent);
+  color: var(--text-h);
+}
+
+.category-tab.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.category-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.category-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  transition: background 0.15s;
+}
+
+.category-card:hover {
+  background: var(--input-bg);
+}
+
+.category-card-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.category-card-icon {
+  font-size: 20px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--input-bg);
+  border-radius: var(--radius-sm);
+}
+
+.category-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.category-card-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.category-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.category-card-actions {
+  display: flex;
+  gap: 4px;
+}
+
+/* Color input */
+.color-input-wrap {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.color-input {
+  width: 40px;
+  height: 40px;
+  padding: 2px;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  background: none;
+}
+
+.color-text {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  background: var(--input-bg);
+  color: var(--text-h);
+  outline: none;
+  font-family: monospace;
+}
+
+.color-text:focus {
+  border-color: var(--accent);
+}
+
 /* ========== Responsive ========== */
 @media (max-width: 900px) {
   .dashboard-grid {

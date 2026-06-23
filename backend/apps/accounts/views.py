@@ -1,13 +1,20 @@
 """Accounts views — register, login, logout, verify, reset password."""
 
+from datetime import timedelta
+
 from django.conf import settings
 from django.contrib.auth import authenticate
+from django.contrib.auth.password_validation import validate_password
 from django.core.mail import send_mail
+from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
+from django.utils.decorators import method_decorator
+from django_ratelimit.decorators import ratelimit
 from rest_framework import generics, status, permissions, serializers
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
@@ -17,8 +24,6 @@ from apps.accounts.serializers import (
     UserProfileSerializer,
     ChangePasswordSerializer,
 )
-from django.utils.decorators import method_decorator
-from django_ratelimit.decorators import ratelimit
 
 # ------------------------------------------------------------------------------
 # Login with Email Verification Check
@@ -45,6 +50,7 @@ class LoginView(TokenObtainPairView):
 # ------------------------------------------------------------------------------
 # Register and Verify Views
 # ------------------------------------------------------------------------------
+@method_decorator(ratelimit(key="ip", rate="3/m", block=True), name="dispatch")
 class RegisterView(generics.CreateAPIView):
     """
     POST /api/v1/auth/register/
@@ -62,8 +68,12 @@ class VerifyEmailView(APIView):
     """
     permission_classes = [permissions.AllowAny]
 
+    @method_decorator(ratelimit(key="ip", rate="10/m", block=True))
     def get(self, request, token, *args, **kwargs):
         token_obj = get_object_or_404(EmailVerificationToken, token=token)
+        if token_obj.is_expired:
+            token_obj.delete()
+            return Response({"error": "Verification token has expired. Please register again."}, status=status.HTTP_400_BAD_REQUEST)
         user = token_obj.user
         user.is_email_verified = True
         user.save()
@@ -82,13 +92,15 @@ class LogoutView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
+        refresh_token = request.data.get("refresh")
+        if not refresh_token:
+            return Response({"error": "Refresh token is required."}, status=status.HTTP_400_BAD_REQUEST)
         try:
-            refresh_token = request.data.get("refresh")
             token = RefreshToken(refresh_token)
             token.blacklist()
             return Response({"message": "Successfully logged out."}, status=status.HTTP_205_RESET_CONTENT)
-        except Exception:
-            return Response({"error": "Invalid or missing refresh token."}, status=status.HTTP_400_BAD_REQUEST)
+        except TokenError:
+            return Response({"error": "Invalid or expired refresh token."}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class MeView(generics.RetrieveUpdateAPIView):
@@ -132,6 +144,7 @@ class ForgotPasswordView(APIView):
     """
     permission_classes = [permissions.AllowAny]
 
+    @method_decorator(ratelimit(key="ip", rate="3/m", block=True))
     def post(self, request, *args, **kwargs):
         email = request.data.get("email")
         if not email:
@@ -139,11 +152,14 @@ class ForgotPasswordView(APIView):
         
         user = CustomUser.objects.filter(email=email).first()
         if user:
-            reset_token = PasswordResetToken.objects.create(user=user)
+            reset_token = PasswordResetToken.objects.create(
+                user=user,
+                expires_at=timezone.now() + timedelta(hours=PasswordResetToken.EXPIRY_HOURS),
+            )
             reset_url = f"{settings.FRONTEND_URL}/reset-password/{reset_token.token}/"
             send_mail(
                 subject="Reset Your Ching-Track Password",
-                message=f"Hi {user.first_name},\n\nYou requested a password reset. Reset your password by clicking the link: {reset_url}\n\nThanks,\nChing-Track Team",
+                message=f"Hi {user.first_name},\n\nYou requested a password reset. Reset your password by clicking the link: {reset_url}\n\nThis link expires in {PasswordResetToken.EXPIRY_HOURS} hour(s).\n\nThanks,\nChing-Track Team",
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[user.email],
                 fail_silently=True,
@@ -160,11 +176,19 @@ class ResetPasswordView(APIView):
     """
     permission_classes = [permissions.AllowAny]
 
+    @method_decorator(ratelimit(key="ip", rate="5/m", block=True))
     def post(self, request, token, *args, **kwargs):
         reset_token = get_object_or_404(PasswordResetToken, token=token, is_used=False)
+        if reset_token.is_expired:
+            return Response({"error": "Password reset token has expired. Please request a new one."}, status=status.HTTP_400_BAD_REQUEST)
         password = request.data.get("password")
         if not password:
             return Response({"password": "This field is required."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            validate_password(password)
+        except ValidationError as e:
+            return Response({"password": e.messages}, status=status.HTTP_400_BAD_REQUEST)
         
         user = reset_token.user
         user.set_password(password)
