@@ -78,6 +78,10 @@ export function exportData(): Promise<Record<string, unknown>> {
   return apiFetch<Record<string, unknown>>("/api/v1/auth/export-data/");
 }
 
+export function verifyEmail(token: string): Promise<{ message: string }> {
+  return apiFetch<{ message: string }>(`/api/v1/auth/verify-email/${token}/`);
+}
+
 export function deleteAccount(): Promise<void> {
   return apiDelete<void>("/api/v1/auth/delete-account/");
 }

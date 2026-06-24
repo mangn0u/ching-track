@@ -1556,3 +1556,64 @@
     grid-template-columns: 1fr 1fr;
   }
 }
+
+/* ========== Verify Email Page ========== */
+.verify-email-body {
+  padding: 8px 0 24px;
+}
+
+.verify-email-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+}
+
+.verify-email-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.verify-email-icon--loading {
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--blue);
+  animation: spin 1.5s linear infinite;
+}
+
+.verify-email-icon--success {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--green);
+}
+
+.verify-email-icon--error {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--red);
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.verify-email-message {
+  font-size: 15px;
+  color: var(--text);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.verify-email-message--success {
+  color: var(--green);
+  font-weight: 500;
+}
+
+.verify-email-message--error {
+  color: var(--red);
+  font-weight: 500;
+}
+
