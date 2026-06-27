@@ -807,7 +807,7 @@
 
 .txn-table-header {
   display: grid;
-  grid-template-columns: 100px 80px 1fr 1fr 120px 80px;
+  grid-template-columns: 100px 80px 1fr 1fr 120px 120px 80px;
   gap: 12px;
   padding: 10px 16px;
   font-size: 12px;
@@ -820,7 +820,7 @@
 
 .txn-row {
   display: grid;
-  grid-template-columns: 100px 80px 1fr 1fr 120px 80px;
+  grid-template-columns: 100px 80px 1fr 1fr 120px 120px 80px;
   gap: 12px;
   padding: 12px 16px;
   align-items: center;
@@ -894,6 +894,20 @@
 }
 
 .amount-expense {
+  color: var(--red);
+}
+
+.txn-balance {
+  font-weight: 600;
+  text-align: right;
+  font-size: 13px;
+}
+
+.balance-positive {
+  color: var(--green);
+}
+
+.balance-negative {
   color: var(--red);
 }
 

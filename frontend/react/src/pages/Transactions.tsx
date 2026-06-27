@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   fetchTransactions,
   fetchCategories,
@@ -85,6 +85,20 @@ export default function Transactions() {
     }
   }
 
+  const runningBalances = useMemo(() => {
+    const sorted = [...transactions].sort((a, b) => {
+      const dc = new Date(a.date).getTime() - new Date(b.date).getTime();
+      return dc !== 0 ? dc : a.id - b.id;
+    });
+    let bal = 0;
+    const map = new Map<number, number>();
+    for (const t of sorted) {
+      bal += t.type === "income" ? t.amount : -t.amount;
+      map.set(t.id, bal);
+    }
+    return map;
+  }, [transactions]);
+
   const incomeCategories = categories.filter((c) => c.type === "income");
   const expenseCategories = categories.filter((c) => c.type === "expense");
 
@@ -149,9 +163,12 @@ export default function Transactions() {
               <span>Category</span>
               <span>Note</span>
               <span>Amount</span>
+              <span>Balance</span>
               <span>Actions</span>
             </div>
-            {transactions.map((txn) => (
+            {transactions.map((txn) => {
+              const balance = runningBalances.get(txn.id) ?? 0;
+              return (
               <div key={txn.id} className="txn-row">
                 <span className="txn-date">{txn.date}</span>
                 <span className={`txn-type txn-type-${txn.type}`}>{txn.type}</span>
@@ -163,6 +180,9 @@ export default function Transactions() {
                 <span className={`txn-amount ${txn.type === "income" ? "amount-income" : "amount-expense"}`}>
                   {txn.type === "income" ? "+" : "-"}{formatCurrency(txn.amount)}
                 </span>
+                <span className={`txn-balance ${balance >= 0 ? "balance-positive" : "balance-negative"}`}>
+                  {formatCurrency(Math.abs(balance))}
+                </span>
                 <span className="txn-actions">
                     <button className="btn-icon" onClick={() => openEdit(txn)} title="Edit">
                       <EditIcon />
@@ -172,7 +192,8 @@ export default function Transactions() {
                     </button>
                 </span>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
