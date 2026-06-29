@@ -15,6 +15,7 @@ import Budgets from "./pages/Budgets";
 import Bills from "./pages/Bills";
 import Goals from "./pages/Goals";
 import Categories from "./pages/Categories";
+import MpesaImport from "./pages/MpesaImport";
 import "./App.css";
 
 function App() {
@@ -35,6 +36,7 @@ function App() {
               <Route path="bills" element={<Bills />} />
               <Route path="goals" element={<Goals />} />
               <Route path="categories" element={<Categories />} />
+              <Route path="mpesa-import" element={<MpesaImport />} />
               <Route path="change-password" element={<ChangePassword />} />
               <Route path="settings" element={<Settings />} />
             </Route>

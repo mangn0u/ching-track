@@ -1631,3 +1631,158 @@
   font-weight: 500;
 }
 
+/* ========== M-Pesa Import Page ========== */
+.mpesa-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.mpesa-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 720px;
+}
+
+.mpesa-input-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.mpesa-textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 14px;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-family: var(--mono);
+  background: var(--input-bg);
+  color: var(--text-h);
+  resize: vertical;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+  line-height: 1.5;
+}
+
+.mpesa-textarea:focus {
+  border-color: var(--accent);
+}
+
+.mpesa-textarea::placeholder {
+  color: var(--text);
+  opacity: 0.6;
+}
+
+.mpesa-textarea:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.mpesa-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.mpesa-preview-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.mpesa-preview-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.mpesa-preview-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mpesa-preview-full {
+  grid-column: 1 / -1;
+}
+
+.mpesa-preview-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text);
+}
+
+.mpesa-preview-value {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.mpesa-ref {
+  font-family: var(--mono);
+  font-size: 14px;
+}
+
+.mpesa-category-select {
+  padding: 10px 12px;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  background: var(--input-bg);
+  color: var(--text-h);
+  outline: none;
+  cursor: pointer;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.mpesa-category-select:focus {
+  border-color: var(--accent);
+}
+
+.mpesa-history-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.mpesa-history-row {
+  display: grid;
+  grid-template-columns: 80px 1fr 1fr 100px;
+  gap: 12px;
+  padding: 10px 0;
+  align-items: center;
+  border-bottom: 1px solid var(--card-border);
+  font-size: 14px;
+}
+
+.mpesa-history-row:last-child {
+  border-bottom: none;
+}
+
+.mpesa-history-meta {
+  color: var(--text);
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mpesa-history-date {
+  color: var(--text);
+  font-size: 13px;
+  text-align: right;
+}
+
