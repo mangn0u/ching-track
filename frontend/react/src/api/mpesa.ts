@@ -1,4 +1,4 @@
-import { apiFetch, apiPost } from "./client";
+import { apiPost } from "./client";
 import type { ParseSmsResponse, ConfirmImportPayload, ConfirmImportResponse } from "../types/mpesa";
 
 export function parseSms(rawSms: string): Promise<ParseSmsResponse> {

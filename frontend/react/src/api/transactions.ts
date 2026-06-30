@@ -1,5 +1,5 @@
 import { apiFetch, apiPost, apiPut, apiDelete } from "./client";
-import type { Transaction, TransactionFormData, TransactionFilters, TransactionSummary, Category } from "../types/transaction";
+import type { Transaction, TransactionDetail, TransactionFormData, TransactionFilters, TransactionSummary, Category } from "../types/transaction";
 
 export function fetchCategories(type?: string): Promise<Category[]> {
   const qs = type ? `?type=${type}` : "";
@@ -15,6 +15,10 @@ export function fetchTransactions(filters?: TransactionFilters): Promise<Transac
   if (filters?.currency) params.set("currency", filters.currency);
   const qs = params.toString();
   return apiFetch<Transaction[]>(`/api/v1/transactions/${qs ? `?${qs}` : ""}`);
+}
+
+export function fetchTransaction(id: number): Promise<TransactionDetail> {
+  return apiFetch<TransactionDetail>(`/api/v1/transactions/${id}/`);
 }
 
 export function createTransaction(data: TransactionFormData): Promise<Transaction> {

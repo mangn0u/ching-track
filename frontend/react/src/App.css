@@ -322,6 +322,27 @@
   font-size: 24px;
 }
 
+.dashboard-filters {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.dashboard-filters select {
+  padding: 6px 10px;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  background: var(--input-bg);
+  color: var(--text-h);
+  outline: none;
+  cursor: pointer;
+}
+
+.dashboard-filters select:focus {
+  border-color: var(--accent);
+}
+
 .period-label {
   font-size: 14px;
   color: var(--text);
@@ -1784,5 +1805,88 @@
   color: var(--text);
   font-size: 13px;
   text-align: right;
+}
+
+/* ========== Transaction Detail Modal ========== */
+.modal-body {
+  padding: 20px 24px 24px;
+}
+
+.detail-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.detail-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.detail-full {
+  grid-column: 1 / -1;
+}
+
+.detail-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.detail-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: var(--text);
+  min-width: 100px;
+  flex-shrink: 0;
+}
+
+.detail-value {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-h);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.detail-amount {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.detail-mono {
+  font-family: var(--mono, monospace);
+  font-size: 13px;
+}
+
+.detail-sms {
+  background: var(--input-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  font-size: 13px;
+  font-family: var(--mono, monospace);
+  line-height: 1.6;
+  color: var(--text);
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
+  overflow-x: auto;
+  max-height: 200px;
+}
+
+.detail-sms code {
+  font-family: inherit;
 }
 

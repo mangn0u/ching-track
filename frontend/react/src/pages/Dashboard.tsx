@@ -3,19 +3,25 @@ import { fetchDashboard } from "../api/dashboard";
 import { formatCurrency } from "../utils/format";
 import type { DashboardData } from "../types/dashboard";
 
+const CURRENT_MONTH = new Date().getMonth() + 1;
+const CURRENT_YEAR = new Date().getFullYear();
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
 export default function Dashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [filterMonth, setFilterMonth] = useState(CURRENT_MONTH);
+  const [filterYear, setFilterYear] = useState(CURRENT_YEAR);
 
   const load = useCallback(() => {
     setLoading(true);
     setError("");
-    fetchDashboard()
+    fetchDashboard(filterMonth, filterYear)
       .then(setData)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, []);
+  }, [filterMonth, filterYear]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -23,13 +29,24 @@ export default function Dashboard() {
   if (error) return <div className="page-error">{error}</div>;
   if (!data) return null;
 
-  const { summary, spending_by_category, budget_vs_actual, global_limit, upcoming_bills, goals, mom_change, month, year, currency } = data;
+  const { summary, spending_by_category, budget_vs_actual, global_limit, upcoming_bills, goals, mom_change, currency } = data;
 
   return (
     <div className="dashboard">
       <div className="dashboard-header">
         <h2>Dashboard</h2>
-        <span className="period-label">{monthName(month)} {year}</span>
+        <div className="dashboard-filters">
+          <select value={filterMonth} onChange={(e) => setFilterMonth(Number(e.target.value))}>
+            {MONTHS.map((m, i) => (
+              <option key={i + 1} value={i + 1}>{m}</option>
+            ))}
+          </select>
+          <select value={filterYear} onChange={(e) => setFilterYear(Number(e.target.value))}>
+            {Array.from({ length: 5 }, (_, i) => CURRENT_YEAR - i).map((y) => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <div className="summary-cards">
@@ -198,10 +215,6 @@ export default function Dashboard() {
       </div>
     </div>
   );
-}
-
-function monthName(m: number) {
-  return ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][m - 1] || "";
 }
 
 

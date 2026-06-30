@@ -3,17 +3,24 @@ import {
   fetchTransactions,
   fetchCategories,
   fetchTransactionSummary,
+  fetchTransaction,
   createTransaction,
   updateTransaction,
   deleteTransaction,
 } from "../api/transactions";
-import { EditIcon, DeleteIcon, CloseIcon } from "../components/Icons";
+import { EditIcon, DeleteIcon, CloseIcon, ViewIcon } from "../components/Icons";
 import { formatCurrency } from "../utils/format";
-import type { Transaction, TransactionFormData, TransactionSummary, Category } from "../types/transaction";
+import type { Transaction, TransactionDetail, TransactionFormData, TransactionSummary, Category } from "../types/transaction";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const CURRENT_MONTH = new Date().getMonth() + 1;
 const CURRENT_YEAR = new Date().getFullYear();
+
+function escapeHtml(text: string): string {
+  const div = document.createElement("div");
+  div.appendChild(document.createTextNode(text));
+  return div.innerHTML;
+}
 
 export default function Transactions() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -27,6 +34,8 @@ export default function Transactions() {
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<Transaction | null>(null);
   const [saving, setSaving] = useState(false);
+  const [detailTxn, setDetailTxn] = useState<TransactionDetail | null>(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -72,6 +81,18 @@ export default function Transactions() {
       throw e;
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function openDetail(id: number) {
+    setLoadingDetail(true);
+    try {
+      const txn = await fetchTransaction(id);
+      setDetailTxn(txn);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to load transaction");
+    } finally {
+      setLoadingDetail(false);
     }
   }
 
@@ -184,6 +205,9 @@ export default function Transactions() {
                   {formatCurrency(Math.abs(balance))}
                 </span>
                 <span className="txn-actions">
+                    <button className="btn-icon" onClick={() => openDetail(txn.id)} title="View details">
+                      <ViewIcon />
+                    </button>
                     <button className="btn-icon" onClick={() => openEdit(txn)} title="Edit">
                       <EditIcon />
                     </button>
@@ -206,6 +230,14 @@ export default function Transactions() {
           saving={saving}
           onSave={handleSave}
           onClose={() => { setShowModal(false); setEditing(null); }}
+        />
+      )}
+
+      {detailTxn && (
+        <TransactionDetailModal
+          txn={detailTxn}
+          loading={loadingDetail}
+          onClose={() => setDetailTxn(null)}
         />
       )}
     </div>
@@ -312,4 +344,92 @@ function TransactionModal({ editing, incomeCategories, expenseCategories, saving
   );
 }
 
+function TransactionDetailModal({ txn, loading, onClose }: {
+  txn: TransactionDetail;
+  loading: boolean;
+  onClose: () => void;
+}) {
+  const safeRawSms = txn.mpesa_raw_sms ? escapeHtml(txn.mpesa_raw_sms) : "";
 
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal modal-lg" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h3>Transaction Details</h3>
+          <button className="btn-icon" onClick={onClose}>
+            <CloseIcon />
+          </button>
+        </div>
+        <div className="modal-body detail-body">
+          {loading ? (
+            <div className="page-loader" style={{ minHeight: 200 }}>Loading...</div>
+          ) : (
+            <div className="detail-grid">
+              <div className="detail-section">
+                <div className="detail-row">
+                  <span className="detail-label">Type</span>
+                  <span className={`txn-type txn-type-${txn.type}`}>{txn.type}</span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">Amount</span>
+                  <span className={`detail-amount ${txn.type === "income" ? "amount-income" : "amount-expense"}`}>
+                    {txn.type === "income" ? "+" : "-"}{formatCurrency(txn.amount)}
+                  </span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">Category</span>
+                  <span className="detail-value">
+                    {txn.category_name ? (
+                      <>
+                        <span className="category-dot" style={{ backgroundColor: txn.category_color }} />
+                        {txn.category_name}
+                      </>
+                    ) : "—"}
+                  </span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">Date</span>
+                  <span className="detail-value">{txn.date}</span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">Note</span>
+                  <span className="detail-value">{txn.note || "—"}</span>
+                </div>
+              </div>
+              <div className="detail-section">
+                <div className="detail-row">
+                  <span className="detail-label">M-Pesa Ref</span>
+                  <span className="detail-value detail-mono">{txn.mpesa_ref || "—"}</span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">Status</span>
+                  <span className="detail-value">
+                    {txn.is_deleted ? (
+                      <span className="status-badge status-over">Deleted</span>
+                    ) : (
+                      <span className="status-badge status-safe">Active</span>
+                    )}
+                  </span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">Created</span>
+                  <span className="detail-value">{new Date(txn.created_at).toLocaleString()}</span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">Updated</span>
+                  <span className="detail-value">{new Date(txn.updated_at).toLocaleString()}</span>
+                </div>
+              </div>
+              {safeRawSms && (
+                <div className="detail-section detail-full">
+                  <span className="detail-label">Raw M-Pesa SMS</span>
+                  <pre className="detail-sms" dangerouslySetInnerHTML={{ __html: safeRawSms }} />
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
