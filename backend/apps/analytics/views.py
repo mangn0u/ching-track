@@ -9,10 +9,10 @@ from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 
 from apps.budgets.models import UserPreferences, Budget
-from apps.transactions.models import Transaction
+from apps.transactions.models import Transaction, Category
 from apps.bills.models import Bill
 from apps.goals.models import SavingsGoal
-from apps.analytics.serializers import DashboardResponseSerializer
+from apps.analytics.serializers import DashboardResponseSerializer, TrendsResponseSerializer
 
 
 class DashboardView(APIView):
@@ -290,4 +290,102 @@ class DashboardView(APIView):
         }
 
         serializer = DashboardResponseSerializer(dashboard_data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class TrendsView(APIView):
+    """
+    GET /api/v1/analytics/trends/
+    Returns multi-month summary and category breakdowns for the Reports page.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("months", type=int, description="Number of trailing months (default 6)", required=False),
+            OpenApiParameter("currency", type=str, description="Currency code (e.g. KES)", required=False),
+        ],
+        responses={200: TrendsResponseSerializer},
+        summary="Fetch multi-month financial trends"
+    )
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        today = date.today()
+
+        months = request.query_params.get("months", 6)
+        try:
+            months = int(months)
+        except ValueError:
+            return Response({"error": "Months must be an integer."}, status=status.HTTP_400_BAD_REQUEST)
+
+        prefs, _ = UserPreferences.objects.get_or_create(user=user)
+        currency = request.query_params.get("currency", prefs.currency)
+
+        monthly_data = []
+        total_income = 0.0
+        total_expense = 0.0
+
+        for i in range(months - 1, -1, -1):
+            m = today.month - i
+            y = today.year
+            while m < 1:
+                m += 12
+                y -= 1
+
+            qs = Transaction.objects.filter(
+                user=user,
+                date__month=m,
+                date__year=y,
+                currency_code=currency,
+                is_deleted=False
+            )
+
+            inc = float(qs.filter(type="income").aggregate(s=Sum("amount"))["s"] or 0.0)
+            exp = float(qs.filter(type="expense").aggregate(s=Sum("amount"))["s"] or 0.0)
+            total_income += inc
+            total_expense += exp
+
+            monthly_data.append({
+                "month": m,
+                "year": y,
+                "income": inc,
+                "expense": exp,
+                "net": inc - exp,
+            })
+
+        # Top spending categories across the full period
+        period_qs = Transaction.objects.filter(
+            user=user,
+            date__gte=date(today.year, today.month, 1) - timedelta(days=30 * months),
+            date__lte=today,
+            currency_code=currency,
+            is_deleted=False,
+        )
+
+        top_categories_qs = (
+            period_qs.filter(type="expense")
+            .values("category__id", "category__name", "category__color", "category__icon")
+            .annotate(total=Sum("amount"))
+            .order_by("-total")[:10]
+        )
+
+        top_categories = []
+        for cat in top_categories_qs:
+            top_categories.append({
+                "category": cat["category__name"] or "Uncategorized",
+                "color": cat["category__color"] or "#6366f1",
+                "icon": cat["category__icon"] or "➖",
+                "total": float(cat["total"]),
+            })
+
+        data = {
+            "currency": currency,
+            "monthly": monthly_data,
+            "total_income": total_income,
+            "total_expense": total_expense,
+            "net": total_income - total_expense,
+            "top_categories": top_categories,
+        }
+
+        serializer = TrendsResponseSerializer(data)
         return Response(serializer.data, status=status.HTTP_200_OK)

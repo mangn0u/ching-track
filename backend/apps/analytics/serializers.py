@@ -64,6 +64,30 @@ class MoMChangeSerializer(serializers.Serializer):
     expense_change_pct = serializers.FloatField()
 
 
+class MonthlyTrendSerializer(serializers.Serializer):
+    month = serializers.IntegerField()
+    year = serializers.IntegerField()
+    income = serializers.DecimalField(max_digits=14, decimal_places=2)
+    expense = serializers.DecimalField(max_digits=14, decimal_places=2)
+    net = serializers.DecimalField(max_digits=14, decimal_places=2)
+
+
+class TopCategorySerializer(serializers.Serializer):
+    category = serializers.CharField()
+    color = serializers.CharField()
+    icon = serializers.CharField()
+    total = serializers.DecimalField(max_digits=14, decimal_places=2)
+
+
+class TrendsResponseSerializer(serializers.Serializer):
+    currency = serializers.CharField()
+    monthly = MonthlyTrendSerializer(many=True)
+    total_income = serializers.DecimalField(max_digits=14, decimal_places=2)
+    total_expense = serializers.DecimalField(max_digits=14, decimal_places=2)
+    net = serializers.DecimalField(max_digits=14, decimal_places=2)
+    top_categories = TopCategorySerializer(many=True)
+
+
 class DashboardResponseSerializer(serializers.Serializer):
     month = serializers.IntegerField()
     year = serializers.IntegerField()
