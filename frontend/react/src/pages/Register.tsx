@@ -10,6 +10,8 @@ export default function Register() {
     password_confirm: "",
     first_name: "",
     last_name: "",
+    phone_number: "",
+    mpesa_phone: "",
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -27,6 +29,11 @@ export default function Register() {
       return;
     }
 
+    if (form.password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+
     setLoading(true);
     try {
       await register({
@@ -35,6 +42,8 @@ export default function Register() {
         password_confirm: form.password_confirm,
         first_name: form.first_name || undefined,
         last_name: form.last_name || undefined,
+        phone_number: form.phone_number || undefined,
+        mpesa_phone: form.mpesa_phone || undefined,
       });
       navigate("/login", {
         state: { message: "Account created! Check your email to verify your account." },
@@ -112,6 +121,29 @@ export default function Register() {
               placeholder="Re-enter your password"
               required
             />
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="phone_number">Phone Number</label>
+              <input
+                id="phone_number"
+                type="tel"
+                value={form.phone_number}
+                onChange={(e) => set("phone_number", e.target.value)}
+                placeholder="+254 712 345 678"
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="mpesa_phone">M-Pesa Phone</label>
+              <input
+                id="mpesa_phone"
+                type="tel"
+                value={form.mpesa_phone}
+                onChange={(e) => set("mpesa_phone", e.target.value)}
+                placeholder="+254 712 345 678"
+              />
+            </div>
           </div>
 
           <button type="submit" className="btn-primary" disabled={loading}>

@@ -22,6 +22,4 @@ export function payBill(id: number, data: PayBillData): Promise<BillPayment> {
   return apiPost<BillPayment>(`/api/v1/bills/${id}/pay/`, data);
 }
 
-export function fetchUpcomingBills(): Promise<Bill[]> {
-  return apiFetch<Bill[]>("/api/v1/bills/upcoming/");
-}
+

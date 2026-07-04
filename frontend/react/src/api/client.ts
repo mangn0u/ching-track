@@ -95,4 +95,4 @@ export function apiDelete<T>(url: string): Promise<T> {
   return apiFetch<T>(url, { method: "DELETE" });
 }
 
-export { setTokens, clearTokens, getAccess };
+export { setTokens, clearTokens, getAccess, getRefresh };

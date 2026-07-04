@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { fetchBudgets, upsertBudget, deleteBudget, fetchBudgetVsActual } from "../api/budgets";
-import { fetchCategories } from "../api/transactions";
+import { fetchCategories } from "../api/categories";
 import { EditIcon, DeleteIcon, CloseIcon } from "../components/Icons";
 import { formatCurrency } from "../utils/format";
 import type { Budget, BudgetFormData, BudgetVsActual } from "../types/budget";

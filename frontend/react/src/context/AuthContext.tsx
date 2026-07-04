@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
-import { fetchMe, loginAndStore } from "../api/auth";
-import { clearTokens, getAccess } from "../api/client";
+import { fetchMe, loginAndStore, logout as apiLogout } from "../api/auth";
+import { getAccess, clearTokens } from "../api/client";
 import type { UserProfile } from "../api/auth";
 
 interface AuthContextType {
@@ -33,8 +33,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(u);
   }
 
-  function logout() {
-    clearTokens();
+  async function logout() {
+    await apiLogout();
     setUser(null);
   }
 

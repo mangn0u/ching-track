@@ -1,4 +1,4 @@
-import { apiFetch, apiPost, apiPut, apiDelete, setTokens } from "./client";
+import { apiFetch, apiPost, apiPut, apiDelete, setTokens, getRefresh, clearTokens } from "./client";
 
 export interface UserProfile {
   id: number;
@@ -84,4 +84,16 @@ export function verifyEmail(token: string): Promise<{ message: string }> {
 
 export function deleteAccount(): Promise<void> {
   return apiDelete<void>("/api/v1/auth/delete-account/");
+}
+
+export async function logout(): Promise<void> {
+  const refresh = getRefresh();
+  if (refresh) {
+    try {
+      await apiPost<{ message: string }>("/api/v1/auth/logout/", { refresh });
+    } catch {
+      // Ignore backend errors — still clear local tokens
+    }
+  }
+  clearTokens();
 }

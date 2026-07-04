@@ -1,13 +1,15 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   fetchTransactions,
-  fetchCategories,
   fetchTransactionSummary,
   fetchTransaction,
   createTransaction,
   updateTransaction,
   deleteTransaction,
 } from "../api/transactions";
+import { fetchCategories } from "../api/categories";
+import { fetchPreferences } from "../api/preferences";
+import type { UserPreferences } from "../types/preferences";
 import { EditIcon, DeleteIcon, CloseIcon, ViewIcon } from "../components/Icons";
 import { formatCurrency } from "../utils/format";
 import type { Transaction, TransactionDetail, TransactionFormData, TransactionSummary, Category } from "../types/transaction";
@@ -36,6 +38,7 @@ export default function Transactions() {
   const [saving, setSaving] = useState(false);
   const [detailTxn, setDetailTxn] = useState<TransactionDetail | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
+  const [preferredCurrency, setPreferredCurrency] = useState("KES");
 
   const load = useCallback(() => {
     setLoading(true);
@@ -44,11 +47,15 @@ export default function Transactions() {
       fetchTransactions({ month: filterMonth, year: filterYear, type: filterType }),
       fetchTransactionSummary(filterMonth, filterYear),
       fetchCategories(),
+      fetchPreferences().catch(() => ({ currency: "KES" } as UserPreferences)),
     ])
-      .then(([txns, sum, cats]) => {
+      .then(([txns, sum, cats, prefs]) => {
         setTransactions(txns);
         setSummary(sum);
         setCategories(cats);
+        if (prefs) {
+          setPreferredCurrency(prefs.currency);
+        }
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
@@ -228,6 +235,7 @@ export default function Transactions() {
           incomeCategories={incomeCategories}
           expenseCategories={expenseCategories}
           saving={saving}
+          preferredCurrency={preferredCurrency}
           onSave={handleSave}
           onClose={() => { setShowModal(false); setEditing(null); }}
         />
@@ -244,11 +252,12 @@ export default function Transactions() {
   );
 }
 
-function TransactionModal({ editing, incomeCategories, expenseCategories, saving, onSave, onClose }: {
+function TransactionModal({ editing, incomeCategories, expenseCategories, saving, preferredCurrency, onSave, onClose }: {
   editing: Transaction | null;
   incomeCategories: Category[];
   expenseCategories: Category[];
   saving: boolean;
+  preferredCurrency: string;
   onSave: (data: TransactionFormData) => Promise<void>;
   onClose: () => void;
 }) {
@@ -274,7 +283,7 @@ function TransactionModal({ editing, incomeCategories, expenseCategories, saving
       await onSave({
         type,
         amount: Number(amount),
-        currency_code: "KES",
+        currency_code: preferredCurrency,
         category: category ? Number(category) : null,
         date,
         note,

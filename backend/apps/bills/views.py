@@ -98,10 +98,12 @@ class BillPayView(APIView):
         )
 
         # Auto-create matching expense Transaction
-        # Find default "Utilities" or "Other Expense" category for the user
+        # Find first expense category for the user, falling back gracefully
         category = Category.objects.filter(user=user, type="expense", name="Utilities").first()
         if not category:
             category = Category.objects.filter(user=user, type="expense", name="Other Expense").first()
+        if not category:
+            category = Category.objects.filter(user=user, type="expense").first()
 
         Transaction.objects.create(
             user=user,

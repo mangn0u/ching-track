@@ -1,10 +1,5 @@
 import { apiFetch, apiPost, apiPut, apiDelete } from "./client";
-import type { Transaction, TransactionDetail, TransactionFormData, TransactionFilters, TransactionSummary, Category } from "../types/transaction";
-
-export function fetchCategories(type?: string): Promise<Category[]> {
-  const qs = type ? `?type=${type}` : "";
-  return apiFetch<Category[]>(`/api/v1/categories/${qs}`);
-}
+import type { Transaction, TransactionDetail, TransactionFormData, TransactionFilters, TransactionSummary } from "../types/transaction";
 
 export function fetchTransactions(filters?: TransactionFilters): Promise<Transaction[]> {
   const params = new URLSearchParams();

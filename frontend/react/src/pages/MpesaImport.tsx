@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { parseSms, confirmImport } from "../api/mpesa";
-import { fetchCategories } from "../api/transactions";
+import { fetchCategories } from "../api/categories";
 import { formatCurrency } from "../utils/format";
 import type { ParsedTransaction } from "../types/mpesa";
 import type { Category } from "../types/transaction";

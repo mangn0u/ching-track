@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { fetchCategories } from "../api/transactions";
+import { fetchCategories } from "../api/categories";
 import { createCategory, updateCategory } from "../api/categories";
 import { apiDelete } from "../api/client";
 import { EditIcon, DeleteIcon, CloseIcon } from "../components/Icons";
