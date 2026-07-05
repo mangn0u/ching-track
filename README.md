@@ -197,7 +197,6 @@ pnpm build  # Outputs to dist/
 - Input validation on all fields
 - User enumeration prevention on password reset
 
-See [SECURITY.md](./SECURITY.md) for the full security posture and known considerations.
 
 ---
 
@@ -207,6 +206,4 @@ Actively developed. The current version is an MVP covering the core personal fin
 
 ---
 
-## License
 
-[MIT](./LICENSE) (or your chosen license)
