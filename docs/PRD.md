@@ -1,10 +1,11 @@
 # Product Requirements Document
-## Personal Finance Tracker — 2-Week MVP
+## ching-track — Personal Finance Tracker
 
-**Version:** 1.0  
-**Owner:** Mang'nu
-**Timeline:** 2 weeks (≈60 hours @ 4hrs/day, 15 days)  **Stack:** React + Tailwind CSS (frontend) · Django + PostgreSQL (backend)  
-**Deployment Target:** Localhost (Week 1) → Railway (Django) + Vercel (React + Tailwind) (Week 2, Day 13)
+**Version:** 2.0  
+**Owner:** Mang'nu  
+**Stack:** Python 3.13+ · Django 6.0 · Django REST Framework 3.17 · PostgreSQL 16 · React 19 · TypeScript 6 · Vite 8  
+**Deployment:** Railway (backend) + Vercel (frontend)  
+**Status:** Built — MVP complete with extended features
 
 ---
 
@@ -19,310 +20,416 @@ We live in a world where most of us operate without a system for tracking income
 | Symptom | Root Cause | This Tool Fixes |
 |---|---|---|
 | "I don't know where my money went" | No transaction log | Transaction entry + category drill-down |
-| "I forgot that bill was due" | No bill calendar | Bill tracker with due dates |
-| "I never hit my savings targets" | No visible goal progress | Savings goals with progress bars |
-| "My budget is just a spreadsheet guess" | No feedback loop | Budget vs actuals per category |
+| "I forgot that bill was due" | No bill calendar | Bill tracker with due dates + upcoming bills |
+| "I never hit my savings targets" | No visible goal progress | Savings goals with progress bars + on-track prediction |
+| "My budget is just a spreadsheet guess" | No feedback loop | Budget vs actuals per category with color-coded status |
+| "Manual entry is tedious" | No import from mobile money | M-Pesa SMS parsing → auto-create transactions |
 
-### Constraints That Shape This Solution
+### Key Design Constraints
 
-- **Solo builder, 4hrs/day** → No microservices. One Django app, one React SPA.
-- **No external APIs in MVP** → No bank connections. Manual entry only. M-Pesa SMS parsing is v2.
-- **Multi-currency** → Store `currency_code` per transaction from Day 1. No conversion in MVP.
-- **Target scale** → 1,000 users. User data fully isolated (row-level scoping on every query).
-
----
-
-## 2. MVP Scope (The Hard Line)
-
-> **Rule:** If it doesn't make the core loop — *log a transaction → see where you stand → adjust* — it is out.
-
-### ✅ In Scope
-
-1. **Authentication** — register (email verification), login, logout, password reset (JWT via SimpleJWT)
-2. **Transaction Management** — create, read, update, delete income + expense transactions
-3. **Category System** — predefined categories + user can add custom ones
-4. **Budget Planner** — set a monthly spend limit per category; see actual vs budget
-5. **Savings Goals** — create a goal with a target amount + deadline; log contributions; on-track indicator
-6. **Global Spending Limit** — set a single monthly spend ceiling (e.g. KES 80,000); see how much remains
-7. **User Preferences** — preferred currency, monthly spending limit, profile settings
-8. **Bill Tracker** — log recurring bills with due dates; mark as paid
-9. **Dashboard** — monthly summary: income, expenses, net, savings rate, category breakdown, month-over-month
-10. **Data Privacy** — GDPR-style: full data export (JSON) + account deletion
-
-### ❌ Out of Scope (Not in 2 Weeks)
-
-- Bank sync / Plaid integration
-- Multi-user / sharing
-- Mobile app
-- PDF/CSV export
-- Notifications / reminders
-- AI categorization
-- Investment tracking
-- Tax reports
+- **Solo-built** → No microservices. One Django app, one React SPA.
+- **No external bank APIs** → No Plaid/Plaid-like connections. Manual entry + M-Pesa SMS parsing.
+- **Multi-currency ready** → `currency_code` on every monetary model. No conversion in current version.
+- **Row-level isolation** → Every query scoped to `user=request.user` with `IsOwner` permissions.
 
 ---
 
-## 3. User Stories (Prioritized)
+## 2. Feature Overview
 
-**Priority: Must Have (Week 1 backend + Week 2 frontend)**
+### 2.1 Authentication & Account Management
+
+| Feature | Status |
+|---|---|
+| Email-based registration with email verification (24h token) | ✓ |
+| JWT login with access (60min) + refresh (7d) token rotation | ✓ |
+| Refresh token blacklisting on logout | ✓ |
+| Password reset flow (forgot/reset with 1h token) | ✓ |
+| Change password (authenticated) | ✓ |
+| Profile view/edit (first name, last name, phone, M-Pesa phone) | ✓ |
+| Rate limiting on all public auth endpoints (3–10 req/min/IP) | ✓ |
+
+### 2.2 Transaction Management
+
+| Feature | Status |
+|---|---|
+| Create, read, update, delete income & expense transactions | ✓ |
+| Filter by month, year, type, category, currency | ✓ |
+| Running balance (cumulative income − expenses) | ✓ |
+| Monthly summary (income, expense, net, savings rate, by-category breakdown) | ✓ |
+| Soft delete with audit trail (`is_deleted` flag) | ✓ |
+| M-Pesa reference and raw SMS storage fields | ✓ |
+
+### 2.3 Category System
+
+| Feature | Status |
+|---|---|
+| 16 system-seeded default categories (6 income, 10 expense) with emoji icons | ✓ |
+| Custom category creation with color + icon | ✓ |
+| Type tabs (income / expense) in frontend | ✓ |
+| Default categories protected from edit/delete | ✓ |
+| Delete blocked when linked transactions exist | ✓ |
+
+### 2.4 Budget Management
+
+| Feature | Status |
+|---|---|
+| Per-category monthly budget with upsert logic | ✓ |
+| Budget vs actual computation per category | ✓ |
+| Status badges (safe / warning / over) with color coding | ✓ |
+| Global monthly spending limit (e.g. KES 80,000) | ✓ |
+| Spending limit status (total spent, remaining, percentage used) | ✓ |
+
+### 2.5 Bill Tracking
+
+| Feature | Status |
+|---|---|
+| Recurring bills (monthly, weekly, one-time) with due dates | ✓ |
+| Soft deactivate (set `is_active=False`) | ✓ |
+| Pay bill → creates BillPayment + auto-creates expense Transaction | ✓ |
+| Computed next due date per bill | ✓ |
+| Paid-this-period checking | ✓ |
+| Upcoming bills (next 7 days) endpoint | ✓ |
+
+### 2.6 Savings Goals
+
+| Feature | Status |
+|---|---|
+| Goals with name, description, target amount, deadline | ✓ |
+| Contribution logging with history view | ✓ |
+| Computed fields: total_saved, remaining, progress_pct | ✓ |
+| Days remaining, monthly_required, is_on_track (pace-based) | ✓ |
+| On-track prediction comparing elapsed time vs saved amount | ✓ |
+
+### 2.7 Dashboard & Analytics
+
+| Feature | Status |
+|---|---|
+| Single-request dashboard: summary + category breakdown + budget vs actual + global limit + upcoming bills + goals + MoM changes | ✓ |
+| Multi-month trends (3 / 6 / 12 month range) | ✓ |
+| Top spending categories over any period | ✓ |
+| Month-over-month change indicators | ✓ |
+
+### 2.8 M-Pesa SMS Parsing
+
+| Feature | Status |
+|---|---|
+| Regex-based parser for standard M-Pesa SMS formats | ✓ |
+| Extracts: amount, type (send/receive), reference code, counterparty name, date | ✓ |
+| XSS sanitization on parsed fields | ✓ |
+| Parse → preview → confirm import flow | ✓ |
+| Duplicate M-Pesa reference detection | ✓ |
+| 29 unit tests covering all supported SMS formats | ✓ |
+
+### 2.9 GDPR & Data Privacy
+
+| Feature | Status |
+|---|---|
+| Export all user data as JSON (profile, categories, transactions, budgets, preferences, bills, goals) | ✓ |
+| Delete account with full cascade (hard delete) | ✓ |
+
+### 2.10 Reports
+
+| Feature | Status |
+|---|---|
+| Interactive multi-month trend chart | ✓ |
+| Monthly breakdown table with income/expense/net | ✓ |
+| Top spending categories ranked | ✓ |
+
+### 2.11 Settings
+
+| Feature | Status |
+|---|---|
+| Profile editing | ✓ |
+| Preferences: currency, monthly spending limit | ✓ |
+| GDPR data export + account deletion | ✓ |
+| Change password | ✓ |
+
+---
+
+## 3. User Stories
 
 | ID | Story | Acceptance Criteria |
 |---|---|---|
-| U1 | As a user, I can log in and have my data be private | Login with email + password; unauthenticated requests return 401 |
-| U2 | As a user, I can add a transaction with amount, category, date, note | Form validates: amount > 0, category required, date required |
-| U3 | As a user, I can see all transactions in a list, filterable by month | Default view = current month; filter by prev months |
-| U4 | As a user, I can edit or delete any transaction | Changes reflect immediately in dashboard totals |
-| U5 | As a user, I can see my spending breakdown by category this month | Dashboard bar chart: category vs amount spent |
-| U6 | As a user, I can set a monthly budget for each category | Input per category; shown as limit in dashboard |
-| U7 | As a user, I can add a bill with name, amount, due date, recurrence | Fields: name, amount, due_day (1-31), frequency (monthly/weekly) |
-| U8 | As a user, I can mark a bill as paid for the current period | Paid status resets next cycle |
-| U9 | As a user, I can create a savings goal with a name, target, deadline | Progress bar = contributions / target |
-| U10 | As a user, I can log a contribution to a savings goal | Contribution history shows per goal |
-
-**Priority: Should Have (if time allows)**
-
-| ID | Story |
-|---|---|
-| U11 | Month-over-month summary: did I spend more or less than last month? |
-| U12 | Color-coded category budget indicator (green/yellow/red) |
-| U13 | Running balance (income minus expenses, cumulative) |
+| U1 | As a user, I can register with email and verify my account | Registration sends verification email; 24h token must be clicked to activate |
+| U2 | As a user, I can log in and have my data be private | Login with email + password returns JWT; unauthenticated requests return 401 |
+| U3 | As a user, I can add a transaction with amount, category, date, note | Form validates: amount > 0, category required, date required |
+| U4 | As a user, I can see all transactions in a list, filterable by month | Default view = current month; filter by prev months, type, category |
+| U5 | As a user, I can see my running balance alongside transactions | Running balance column shows cumulative net after each transaction |
+| U6 | As a user, I can edit or delete any transaction | Changes reflect immediately in totals |
+| U7 | As a user, I can see my spending breakdown by category this month | Dashboard bar chart: category vs amount spent |
+| U8 | As a user, I can set a monthly budget for each category | Input per category; limits color-coded (green/yellow/red) in dashboard |
+| U9 | As a user, I can set a global monthly spending limit | Single ceiling across all expenses; remaining amount shown |
+| U10 | As a user, I can add a bill with name, amount, due date, recurrence | Fields: name, amount, due_day (1-31), frequency (monthly/weekly/once) |
+| U11 | As a user, I can mark a bill as paid and have an expense transaction created | Pay button creates BillPayment + Transaction record |
+| U12 | As a user, I can see bills due in the next 7 days | Dashboard shows upcoming bills with pay buttons |
+| U13 | As a user, I can create a savings goal with a name, target, deadline | Progress bar = contributions / target |
+| U14 | As a user, I can log a contribution to a savings goal | Contribution history shows per goal with date and note |
+| U15 | As a user, I can see if I'm on track to meet my savings goal | On-track indicator compares elapsed time vs saved amount |
+| U16 | As a user, I can manage my categories (add, edit, delete custom ones) | Separate page with income/expense tabs; defaults protected |
+| U17 | As a user, I can import transactions from M-Pesa SMS | Paste SMS text → preview parsed transaction → confirm to create |
+| U18 | As a user, I can view multi-month trends and top spending categories | Reports page with 3/6/12 month range selector and chart |
+| U19 | As a user, I can export all my data as JSON | Single-click GDPR data export |
+| U20 | As a user, I can delete my account and all associated data | Account deletion with full cascade |
+| U21 | As a user, I can change my password | Requires old password; validates new password complexity |
+| U22 | As a user, I can reset my password if I forgot it | Email with 1h token; rate-limited to prevent enumeration |
 
 ---
 
 ## 4. Data Architecture
 
-> **First Principles Note:** The data model is the contract between your frontend and backend. Get this wrong and you'll be refactoring forever. Every field you add now costs ~5 minutes. Every field you add in Week 3 costs 2 hours.
+> **First Principles:** The data model is the contract between frontend and backend. All monetary values use `DecimalField` — never floats. All dates use `DateField` (not `DateTimeField`) to avoid timezone bugs.
 
-### 4.1 Entity-Relationship Overview
+### 4.1 Entity-Relationship Diagram
 
 ```
-User (Django built-in)
+CustomUser (email as username, no username field)
+  │
+  ├── EmailVerificationToken (1:1, 24h expiry)
+  │
+  ├── PasswordResetToken (1:N, 1h expiry)
+  │
+  ├── UserPreferences (1:1, currency, monthly_spending_limit)
   │
   ├── Category (name, type: income|expense, color, icon, is_default)
   │
-  ├── Transaction (amount, type, category_fk, date, note, created_at)
+  ├── Transaction (amount, type, category, date, currency, note,
+  │   │            mpesa_ref, mpesa_raw_sms, is_deleted)
+  │   │
+  │   └── Budget (category, month, year, limit_amount)
   │
-  ├── Budget (category_fk, month, year, limit_amount)
+  ├── Bill (name, amount, due_day, currency, frequency, is_active)
+  │   └── BillPayment (bill, paid_date, amount_paid, note)
   │
-  ├── Bill (name, amount, due_day, frequency, is_active)
-  │   └── BillPayment (bill_fk, paid_date, amount_paid)
-  │
-  └── SavingsGoal (name, target_amount, deadline, created_at)
-      └── GoalContribution (goal_fk, amount, date, note)
+  └── SavingsGoal (name, description, target_amount, currency, deadline)
+      └── GoalContribution (goal, amount, date, note)
 ```
 
-### 4.2 Django Models (Exact Schema)
+### 4.2 Database Models
 
-```python
-# transactions/models.py
+#### `accounts.CustomUser`
+- Email-based auth: `email` (unique, USERNAME_FIELD), `first_name`, `last_name`
+- `phone_number`, `mpesa_phone` (for future Daraja API)
+- `is_email_verified` (must be true before login)
+- Managed by `CustomUserManager` (no username field)
+- Signals: on creation → auto-creates `UserPreferences` + 16 default `Category` entries
 
-class Category(models.Model):
-    TRANSACTION_TYPES = [('income', 'Income'), ('expense', 'Expense')]
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    name = models.CharField(max_length=100)
-    type = models.CharField(max_length=10, choices=TRANSACTION_TYPES)
-    color = models.CharField(max_length=7, default='#6366f1')  # hex
-    is_default = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
+#### `accounts.EmailVerificationToken`
+- One-to-one with user, UUID token, 24-hour TTL (`expires_at`)
 
-    class Meta:
-        unique_together = ('user', 'name', 'type')
+#### `accounts.PasswordResetToken`
+- ForeignKey to user (multiple resets allowed), UUID token, 1-hour TTL
+- `is_used` flag (one-time use)
 
+#### `transactions.Category`
+- `user` (FK), `name`, `type` (income/expense), `color` (hex), `icon` (emoji), `is_default`
+- `unique_together = (user, name, type)`
 
-class Transaction(models.Model):
-    TRANSACTION_TYPES = [('income', 'Income'), ('expense', 'Expense')]
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
-    type = models.CharField(max_length=10, choices=TRANSACTION_TYPES)
-    amount = models.DecimalField(max_digits=12, decimal_places=2)
-    date = models.DateField()
-    note = models.CharField(max_length=255, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+#### `transactions.Transaction`
+- `user` (FK), `category` (FK, SET_NULL on delete)
+- `type`, `amount` (Decimal 14,2), `currency_code` (default KES)
+- `date`, `note`, `mpesa_ref`, `mpesa_raw_sms`
+- `is_deleted` (soft delete — never hard-deleted)
+- Indexes: `(user, date)`, `(user, type)`, `(user, is_deleted)`
 
+#### `budgets.UserPreferences`
+- One-to-one with user, `currency`, `monthly_spending_limit` (nullable Decimal)
+- Auto-created via signal on registration
 
-class Budget(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE)
-    month = models.IntegerField()   # 1-12
-    year = models.IntegerField()
-    limit_amount = models.DecimalField(max_digits=12, decimal_places=2)
+#### `budgets.Budget`
+- `user` (FK), `category` (FK), `month`, `year`, `limit_amount`
+- `unique_together = (user, category, month, year)` — upsert logic in view
 
-    class Meta:
-        unique_together = ('user', 'category', 'month', 'year')
+#### `bills.Bill`
+- `user` (FK), `name`, `amount` (Decimal 14,2), `currency_code`, `due_day` (1-31)
+- `frequency` (monthly/weekly/once), `is_active` (soft delete)
 
+#### `bills.BillPayment`
+- `bill` (FK), `paid_date`, `amount_paid`, `note`
+- One record per billing period per bill
 
-class Bill(models.Model):
-    FREQUENCY_CHOICES = [('monthly', 'Monthly'), ('weekly', 'Weekly'), ('once', 'One-time')]
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    name = models.CharField(max_length=150)
-    amount = models.DecimalField(max_digits=12, decimal_places=2)
-    due_day = models.IntegerField()  # day of month (1-31)
-    frequency = models.CharField(max_length=10, choices=FREQUENCY_CHOICES, default='monthly')
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+#### `goals.SavingsGoal`
+- `user` (FK), `name`, `description`, `target_amount`, `currency_code`
+- `deadline` (nullable)
+- Property: `total_saved` = SUM of contributions (computed at query time)
+- Serializer computed fields: `total_saved`, `remaining`, `progress_pct`, `days_remaining`, `monthly_required`, `is_on_track`
 
-
-class BillPayment(models.Model):
-    bill = models.ForeignKey(Bill, on_delete=models.CASCADE, related_name='payments')
-    paid_date = models.DateField()
-    amount_paid = models.DecimalField(max_digits=12, decimal_places=2)
-
-
-class SavingsGoal(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    name = models.CharField(max_length=150)
-    target_amount = models.DecimalField(max_digits=12, decimal_places=2)
-    deadline = models.DateField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-
-class GoalContribution(models.Model):
-    goal = models.ForeignKey(SavingsGoal, on_delete=models.CASCADE, related_name='contributions')
-    amount = models.DecimalField(max_digits=12, decimal_places=2)
-    date = models.DateField()
-    note = models.CharField(max_length=255, blank=True)
-```
+#### `goals.GoalContribution`
+- `goal` (FK), `amount`, `date`, `note`
 
 ---
 
-## 5. API Design (REST Endpoints)
+## 5. API Design
 
-> **Pattern:** All endpoints are prefixed `/api/v1/`. All require authentication. All return JSON.
+> All endpoints prefixed `/api/v1/`. Authentication via JWT Bearer token. Full OpenAPI schema at `/api/schema/`, Swagger UI at `/api/docs/`.
 
-### Auth
+### 5.1 Health
 
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/api/v1/auth/register/` | Create account, send verification email |
-| GET | `/api/v1/auth/verify-email/<token>/` | Activate account |
-| POST | `/api/v1/auth/login/` | Login → returns `{access, refresh, user}` |
-| POST | `/api/v1/auth/token/refresh/` | Rotate JWT tokens |
-| POST | `/api/v1/auth/logout/` | Blacklist refresh token |
-| GET/PUT | `/api/v1/auth/me/` | View / update profile |
-| POST | `/api/v1/auth/forgot-password/` | Send reset email |
-| POST | `/api/v1/auth/reset-password/<token>/` | Set new password |
-| POST | `/api/v1/auth/change-password/` | Change password (authenticated) |
-| GET | `/api/v1/auth/export-data/` | GDPR: export all user data as JSON |
-| DELETE | `/api/v1/auth/delete-account/` | GDPR: delete account + all data |
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| GET | `/api/v1/health/` | Public | Health check → `{"status":"ok"}` |
 
-### Transactions
+### 5.2 Auth
 
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/v1/transactions/` | List (filter: `?month=6&year=2026&type=expense`) |
-| POST | `/api/v1/transactions/` | Create |
-| PUT | `/api/v1/transactions/:id/` | Update |
-| DELETE | `/api/v1/transactions/:id/` | Delete |
-| GET | `/api/v1/transactions/summary/` | Monthly totals: `{income, expense, net, by_category[]}` |
+| Method | Endpoint | Rate Limit | Description |
+|---|---|---|---|
+| POST | `/auth/register/` | 3/min/IP | Create account + send verification email |
+| GET | `/auth/verify-email/<uuid:token>/` | 10/min/IP | Activate account |
+| POST | `/auth/login/` | 5/min/IP | Login → `{access, refresh, user}` |
+| POST | `/auth/token/refresh/` | — | Rotate access token |
+| POST | `/auth/logout/` | — | Blacklist refresh token |
+| GET/PUT | `/auth/me/` | — | View / update profile |
+| POST | `/auth/change-password/` | — | Change password (requires old password) |
+| POST | `/auth/forgot-password/` | 3/min/IP | Send reset email (enumeration-safe) |
+| POST | `/auth/reset-password/<uuid:token>/` | 5/min/IP | Set new password with token |
+| GET | `/auth/export-data/` | — | GDPR: export all user data as JSON |
+| DELETE | `/auth/delete-account/` | — | GDPR: hard delete account + all data |
 
-### Categories
+### 5.3 Categories
 
 | Method | Endpoint | Description |
 |---|---|---|
-| GET | `/api/v1/categories/` | List all user's categories |
-| POST | `/api/v1/categories/` | Create custom category |
-| DELETE | `/api/v1/categories/:id/` | Delete (only if no transactions linked) |
+| GET | `/categories/` | List (`?type=income`/`expense`) |
+| POST | `/categories/` | Create custom category |
+| GET/PUT/DELETE | `/categories/:id/` | Retrieve / update (non-default) / delete |
 
-### Budgets
-
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/v1/budgets/` | List (`?month=6&year=2026`) |
-| POST | `/api/v1/budgets/` | Set/update budget for category+month |
-| GET | `/api/v1/budgets/vs-actual/` | Budget limit vs actual spend per category |
-
-### Bills
+### 5.4 Transactions
 
 | Method | Endpoint | Description |
 |---|---|---|
-| GET | `/api/v1/bills/` | List active bills |
-| POST | `/api/v1/bills/` | Create bill |
-| PUT | `/api/v1/bills/:id/` | Edit |
-| DELETE | `/api/v1/bills/:id/` | Soft delete (set `is_active=False`) |
-| POST | `/api/v1/bills/:id/pay/` | Mark paid → creates BillPayment record |
+| GET | `/transactions/` | List (paginated, filters: `?month`, `?year`, `?type`, `?category`, `?currency`) |
+| POST | `/transactions/` | Create |
+| GET | `/transactions/summary/` | Monthly totals: income, expense, net, savings_rate, by_category |
+| GET/PUT/PATCH/DELETE | `/transactions/:id/` | Retrieve / update / partial update / soft-delete |
 
-### Savings Goals
+### 5.5 Budgets
 
 | Method | Endpoint | Description |
 |---|---|---|
-| GET | `/api/v1/goals/` | List goals with `total_saved`, `progress_pct` |
-| POST | `/api/v1/goals/` | Create goal |
-| PUT | `/api/v1/goals/:id/` | Edit |
-| POST | `/api/v1/goals/:id/contribute/` | Add contribution |
-| GET | `/api/v1/goals/:id/contributions/` | Contribution history |
+| GET | `/budgets/` | List (`?month`, `?year`) |
+| POST | `/budgets/` | Upsert (create or update) |
+| GET | `/budgets/vs-actual/` | Budget vs actual per category with safe/warning/over status |
+| DELETE | `/budgets/:id/` | Delete budget |
+
+### 5.6 Preferences
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET/PUT | `/preferences/` | View / edit currency, monthly_spending_limit |
+| GET | `/preferences/spending-status/` | Global limit: total_spent, remaining, pct_used, status |
+
+### 5.7 Bills
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/bills/` | List (`?active=true/false`) |
+| POST | `/bills/` | Create |
+| GET | `/bills/upcoming/` | Bills due in next 7 days |
+| GET/PUT/DELETE | `/bills/:id/` | Retrieve / update / soft-delete |
+| POST | `/bills/:id/pay/` | Pay → creates BillPayment + expense Transaction |
+
+### 5.8 Savings Goals
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/goals/` | List with computed progress fields |
+| POST | `/goals/` | Create |
+| GET/PUT/DELETE | `/goals/:id/` | Retrieve / update / delete |
+| POST | `/goals/:id/contribute/` | Add contribution |
+| GET | `/goals/:id/contributions/` | Contribution history |
+
+### 5.9 Analytics
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/analytics/dashboard/` | Full dashboard: summary, category breakdown, budget vs actual, global limit, upcoming bills, goals, MoM change |
+| GET | `/analytics/trends/` | Multi-month trends (3/6/12 months) + top categories |
+
+### 5.10 M-Pesa
+
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/mpesa/parse-sms/` | Parse raw M-Pesa SMS → pre-filled transaction preview |
+| POST | `/mpesa/confirm-import/` | Confirm and create transaction from parsed data |
 
 ---
 
 ## 6. Frontend Architecture
 
-### Pages & Routes
+### 6.1 Pages & Routes
 
-```
-/login             → LoginPage
-/register          → RegisterPage
-/                  → Dashboard (protected)
-/transactions      → TransactionListPage (protected)
-/transactions/new  → TransactionFormPage
-/budgets           → BudgetPage
-/bills             → BillsPage
-/goals             → GoalsPage
-```
+| Route | Page | Auth | Description |
+|---|---|---|---|
+| `/login` | `Login.tsx` | No | Sign in |
+| `/register` | `Register.tsx` | No | Registration (name, email, password, phone) |
+| `/forgot-password` | `ForgotPassword.tsx` | No | Enter email for reset link |
+| `/reset-password/:token` | `ResetPassword.tsx` | No | Set new password |
+| `/verify-email/:token` | `VerifyEmail.tsx` | No | Verification status |
+| `/` | `Dashboard.tsx` | Yes | Summary cards, category chart, budget vs actual, upcoming bills, goals, MoM change |
+| `/transactions` | `Transactions.tsx` | Yes | Filtered list, CRUD modals, running balance, detail modal |
+| `/budgets` | `Budgets.tsx` | Yes | Budget list with vs-actual, status badges, CRUD modal |
+| `/bills` | `Bills.tsx` | Yes | Bill cards, pay button, CRUD modal |
+| `/goals` | `Goals.tsx` | Yes | Goal cards, progress bars, contribute modal, history modal |
+| `/categories` | `Categories.tsx` | Yes | Category list with income/expense tabs, CRUD modal |
+| `/mpesa-import` | `MpesaImport.tsx` | Yes | Paste SMS → parse → preview → import |
+| `/reports` | `Reports.tsx` | Yes | Multi-month trend chart, monthly breakdown, top categories |
+| `/settings` | `Settings.tsx` | Yes | Profile, preferences, GDPR export, delete account |
+| `/change-password` | `ChangePassword.tsx` | Yes | Change password form |
 
-### Component Map
+### 6.2 Component Tree
 
 ```
 App
-├── AuthProvider (Context: user, login, logout)
+├── AuthProvider (Context: user, tokens, login, logout)
 ├── Layout
-│   ├── Sidebar (nav links)
+│   ├── Sidebar (all nav links, user avatar, month/year, logout)
 │   └── <Outlet /> (react-router)
-├── Dashboard
-│   ├── SummaryCards (Income | Expenses | Net | Savings)
-│   ├── CategoryBreakdownChart (horizontal bar)
-│   ├── BudgetStatusList (limit vs actual, color coded)
-│   └── UpcomingBills (next 7 days)
-├── TransactionListPage
-│   ├── MonthSelector
-│   ├── TransactionFilters (type, category)
-│   └── TransactionTable (with edit/delete)
-├── BudgetPage
-│   └── BudgetCategoryRow (per category: input + actuals)
-├── BillsPage
-│   ├── BillCard (name, amount, due date, pay button)
-│   └── AddBillForm
-└── GoalsPage
-    ├── GoalCard (name, progress bar, contribute button)
-    └── AddGoalForm
+├── ProtectedRoute (redirects to /login if unauthenticated)
+├── Pages (see above)
+└── Shared Components
+    ├── Icons (EditIcon, DeleteIcon, CloseIcon, ViewIcon, HistoryIcon)
+    └── format.ts (Intl.NumberFormat currency formatting)
 ```
 
-### State Management Strategy
+### 6.3 State Management
 
-> **No Redux. No Zustand.** You don't need global state for an MVP with one user.
+- **Auth state:** React Context (`AuthContext`) — user object, tokens, login/logout functions
+- **API client:** Centralized `client.ts` with JWT auto-refresh, `setTokens`/`clearTokens`
+- **Server data:** Each page fetches its own data via `useEffect` + local `useState`
+- **Forms:** Controlled components with local `useState`
+- **No Redux/Zustand** — each page is self-contained
 
-- **Auth state:** React Context (`AuthContext`)
-- **Server data:** Fetch directly in each page component with `useEffect`. Store in local `useState`.
-- **Forms:** Controlled components with local `useState`.
-- **Error handling:** Local state per form/component.
+### 6.4 API Service Modules
+
+| Module | Key Functions |
+|---|---|
+| `auth.ts` | Login, register, forgot/reset password, change password, profile CRUD, export data, delete account, verify email, logout |
+| `categories.ts` | Fetch, create, update, delete categories |
+| `transactions.ts` | Fetch (filtered), create, update, delete, fetch detail, fetch summary |
+| `budgets.ts` | Fetch, upsert, delete, fetch vs-actual |
+| `bills.ts` | Fetch, create, update, delete, pay bill |
+| `goals.ts` | Fetch, create, update, delete, contribute, fetch contributions |
+| `mpesa.ts` | Parse SMS, confirm import |
+| `dashboard.ts` | Fetch dashboard data |
+| `reports.ts` | Fetch trends data |
+| `preferences.ts` | Fetch, update preferences, fetch spending status |
 
 ---
 
-## 7. UI/UX Guidelines
+## 7. UI/UX Design
 
-### Design System
+### 7.1 Design System
 
-- **Theme:** Dark editorial (consistent with your Spark Lite aesthetic)
-- **Primary font:** System font stack or `IBM Plex Mono` for numbers
-- **Color palette:**
-  - Background: `#0f0f0f`
-  - Surface: `#1a1a1a`
-  - Border: `#2a2a2a`
-  - Accent: `#22d3ee` (cyan — income)
-  - Danger: `#f43f5e` (rose — expense)
-  - Muted: `#6b7280`
+- **Theme:** Dark editorial — backgrounds `#0f0f0f`, surfaces `#1a1a1a`, borders `#2a2a2a`
+- **Typography:** System font stack
+- **Colors:**
+  - Income: cyan `#22d3ee`
+  - Expense: rose `#f43f5e`
+  - Accent (brand): purple `#6366f1`
+  - Muted text: `#6b7280`
+  - Budget safe: emerald, Budget warning: amber, Budget over: rose
 - **Key principle:** Numbers always right-aligned. Income always cyan. Expense always rose.
 
-### Dashboard Layout (wireframe logic)
+### 7.2 Dashboard Layout
 
 ```
 ┌────────────────────────────────────────────┐
@@ -337,222 +444,169 @@ App
 │ Upcoming Bills (next 7 days)               │
 │  Netflix  KES 1,200  Due Jun 28  [Pay]     │
 │  Rent     KES 25,000 Due Jul 1   [Pay]     │
+├─────────────────────────────────────────────┤
+│ Savings Goals Snapshot                     │
+│  Emergency Fund  45%  ██████░░░░  [View]   │
+│  Vacation        70%  ███████░░░  [View]   │
+├─────────────────────────────────────────────┤
+│ vs Last Month: Income ↑12%  Expenses ↓3%   │
 └─────────────────────────────────────────────┘
 ```
 
 ---
 
-## 8. Week-by-Week Build Plan
+## 8. Tech Stack & Architecture
 
-> **Rule:** Every day ends with something that runs. No "setup days". No dead ends.
+### 8.1 Technology Choices
 
-### WEEK 1 — Backend & Foundation (30 hours)
+| Layer | Technology |
+|---|---|
+| **Backend framework** | Django 6.0.6, Django REST Framework 3.17.1 |
+| **Auth** | djangorestframework-simplejwt (rotation + blacklisting) |
+| **Database** | PostgreSQL 16 (Docker Compose) |
+| **Frontend** | React 19.2.6, TypeScript 6.0.2, Vite 8.0.12, react-router-dom 7.17.0 |
+| **API documentation** | drf-spectacular (Swagger UI + OpenAPI schema) |
+| **Rate limiting** | django-ratelimit |
+| **CORS** | django-cors-headers |
+| **Containerization** | Docker Compose (PostgreSQL only) |
+| **Deployment** | Railway (Django) + Vercel (React) |
+| **Styling** | Custom CSS (dark theme, no framework) |
 
-**Goal: A working REST API you can test in Postman/curl. No frontend yet.**
-
-| Day | Hours | Deliverable | Done When |
-|---|---|---|---|
-| **Day 1** | 4h | Django project setup, models, migrations | `python manage.py migrate` runs clean. All 6 models exist in DB |
-| **Day 2** | 4h | Auth endpoints (register, login, logout, me) | Can register + login via curl. Session cookie works |
-| **Day 3** | 4h | Transaction CRUD endpoints + category endpoints | CRUD tested in Postman. Filter by month/year works |
-| **Day 4** | 4h | Budget endpoints + `vs-actual` computed endpoint | `GET /budgets/vs-actual/` returns `{category, limit, actual, remaining}[]` |
-| **Day 5** | 4h | Bills endpoints (CRUD + `/pay/`) | Can create bill, mark paid, payment logged |
-| **Day 6** | 4h | Savings Goals endpoints + contribution logic | Goal shows `total_saved` and `progress_pct` computed |
-| **Day 7** | 2h | Seed data script + basic error handling review | `python seed.py` populates 3 months of fake data |
-
-**Week 1 Architecture Decisions:**
-
-- Use `django-cors-headers` from Day 1 (you'll need it for frontend)
-- Use `djangorestframework` for serializers + class-based views
-- All money stored as `DecimalField` — never `FloatField` (floating point errors in finance = bugs)
-- All dates stored as `DateField`, not `DateTimeField` (timezone bugs kill MVPs)
-- User scoping: every queryset filters `user=request.user` — **test this explicitly**
-
----
-
-### WEEK 2 — Frontend & Integration (30 hours)
-
-**Goal: A working React SPA connected to your live API. Deployed by Day 14.**
-
-| Day | Hours | Deliverable | Done When |
-|---|---|---|---|
-| **Day 8** | 4h | React + Tailwind + React Router setup. Auth flow (login/register pages). `AuthContext` | Can log in, session persists on refresh |
-| **Day 9** | 4h | Dashboard page: summary cards + category bar chart | Numbers match what API returns. Chart renders |
-| **Day 10** | 4h | Transaction list page: table + month filter + add/edit/delete | Full CRUD works end-to-end |
-| **Day 11** | 4h | Budget page: set limits, see vs-actual with color coding | Red/yellow/green status per category updates on save |
-| **Day 12** | 4h | Bills page + Goals page | Pay button works. Contribution modal works. Progress bar updates |
-| **Day 13** | 4h | Deploy backend (Railway) + frontend (Vercel/Netlify). Fix CORS/env vars | App is live at a URL you can share |
-| **Day 14** | 2h | Bug fixes, polish, write a README | README explains what it does + how to run locally |
-
-**Week 2 Architecture Decisions:**
-
-- Use `fetch` with `credentials: 'include'` for session cookie auth (simpler than JWT for an MVP)
-- Create one `api.js` utility file that wraps all fetch calls (easier to swap base URL for prod)
-- Use `recharts` for charts (already in your React toolkit from Spark Lite context)
-- Mobile responsive but desktop-first (80% of budget work happens on desktop)
-
----
-
-## 9. Technical Constraints & Risk Register
-
-| Risk | Likelihood | Impact | Mitigation |
-|---|---|---|---|
-| CORS issues between React dev server and Django | High | Medium | Install `django-cors-headers` on Day 1, configure before writing any frontend |
-| Session auth breaks in prod (Vercel + Railway = cross-domain) | High | High | Switch to JWT (`djangorestframework-simplejwt`) on Day 13 if needed. localStorage for token |
-| Data model changes after Week 1 | Medium | High | Finalize schema before writing any serializers. Schema changes after Day 3 = costly |
-| Scope creep on Day 9-12 | High | High | If a feature isn't in this PRD, add it to a `v2-backlog.md` file. Do not touch it |
-| Chart library complexity | Low | Low | `recharts` is beginner-friendly. Use `BarChart` only — no custom renderers |
-
----
-
-## 10. Definition of Done (MVP Complete)
-
-The MVP is done when a user can:
-
-- [ ] Register and log in with email + password
-- [ ] Add, edit, delete a transaction (income or expense)
-- [ ] See this month's total income, expenses, and net balance on a dashboard
-- [ ] See a bar chart of spending by category
-- [ ] Set a monthly budget limit for any category and see how much is remaining
-- [ ] Add a recurring bill and mark it as paid
-- [ ] Create a savings goal and log a contribution
-- [ ] See goal progress as a percentage bar
-
-All of the above must work on the **deployed URL**, not just localhost.
-
----
-
-## 11. Business Layer — Why This Matters Beyond the Build
-
-### What You're Actually Building
-
-A finance tracker is a **data capture + insight loop**. The value isn't the CRUD — it's the behavior change it creates. Users who see their spending lose the ability to rationalize it.
-
-### Portfolio Framing
-
-When presenting this to a client or in a job application:
-
-> "Built a personal finance system with a Django REST API and React frontend. Designed a normalized data schema tracking transactions, budgets, bills, and savings goals across multiple time periods. Implemented computed endpoints for budget-vs-actual analysis, deployed on Railway + Vercel."
-
-That signals: **API design thinking, data modeling, deployment experience** — which is exactly what a data engineering-adjacent full-stack role wants.
-
-### Productization Path (Post-MVP)
-
-If you wanted to sell this as a service:
-
-- **SaaS:** KES 499/month per user. Target: salaried professionals, freelancers
-- **Differentiator:** Offline-first (PWA), Kenya-native (M-Pesa import)
-- **Distribution:** Twitter/X for Kenyan professionals, LinkedIn for fintech positioning
-
-### v2 Backlog (Don't Touch in 2 Weeks)
-
-- M-Pesa SMS parser → auto-import transactions
-- CSV export
-- Recurring transaction auto-creation
-- Shared budgets (couples/roommates)
-- AI categorization (send transaction note → Claude API → returns category)
-
----
-
-## 12. Daily Routine (Time Budget)
+### 8.2 Project Structure
 
 ```
-Hour 1: Review yesterday's output. Fix any broken tests or endpoints.
-Hour 2-3: Build the day's deliverable (backend or frontend).
-Hour 4: Test manually. Commit. Write one sentence in your dev log.
+ching-track/
+├── backend/
+│   ├── config/settings/         # base.py, development.py, production.py
+│   ├── apps/
+│   │   ├── accounts/            # CustomUser, auth views, email verification, GDPR
+│   │   ├── transactions/        # Category + Transaction models, views, M-Pesa parser
+│   │   ├── budgets/             # Budget + UserPreferences models, views
+│   │   ├── bills/               # Bill + BillPayment models, views
+│   │   ├── goals/               # SavingsGoal + GoalContribution models, views
+│   │   └── analytics/           # Dashboard + trends aggregation views
+│   ├── core/                    # IsOwner permission, pagination, exception handler, CSP
+│   ├── seed.py                  # Comprehensive test data seeder
+│   └── manage.py
+├── frontend/react/
+│   └── src/
+│       ├── api/                 # 10 service modules + centralized client.ts
+│       ├── components/          # Layout, ProtectedRoute, Icons
+│       ├── context/             # AuthContext
+│       ├── pages/               # 15 page components
+│       ├── types/               # 8 TypeScript interface files
+│       └── utils/               # format.ts
+├── docs/                        # PRD.md, WEEK1_IMPLEMENTATION_PLAN.md
+├── docker-compose.yml           # PostgreSQL 16
+└── pyproject.toml               # Root Python project definition
 ```
+
+### 8.3 Key Architectural Decisions
+
+- **API-first**: Django serves pure REST API; React SPA is fully separate
+- **User-scoped data**: Every query filters by `user=request.user` + `IsOwner` permission
+- **Computed fields**: Budget spend, goal progress, bill due dates computed at query time (never stored)
+- **Soft deletes**: Transactions (`is_deleted`) + bills (`is_active`) for audit trail
+- **Decimal for money**: All monetary values use `DecimalField` — never floats
+- **No global state library**: Each page self-contained; `AuthContext` only for auth
+- **JWT in localStorage**: Simple token storage with auto-refresh logic
+- **Signals for defaults**: `UserPreferences` + 16 default `Category` entries created on registration
+- **CSP in production**: Content Security Policy headers via middleware
 
 ---
 
-## 13. Future Features (Post-MVP Roadmap)
+## 9. Security
 
-> These are explicitly **out of scope** for the 2-week MVP. They are documented here to ensure the current architecture does not block their future implementation.
+| Feature | Implementation |
+|---|---|
+| **Authentication** | JWT access (60min) + refresh (7d) with rotation and blacklisting |
+| **Authorization** | `IsOwner` permission class on all detail views |
+| **Rate limiting** | 3–10 requests/min/IP on all public auth endpoints |
+| **CSP** | Content Security Policy headers in production |
+| **HSTS** | Strict-Transport-Security in production |
+| **SSL** | Secure cookies + SSL redirect in production |
+| **Error handling** | Custom exception handler — no stack trace leakage, consistent JSON format |
+| **Money** | `DecimalField` for all monetary values — no floating-point errors |
+| **Validation** | Input validation on all fields (amount > 0, category required, etc.) |
+| **Enumeration prevention** | Password reset returns same response whether email exists or not |
+| **XSS prevention** | `html.escape` on M-Pesa parser output |
+
+---
+
+## 10. Seed Data
+
+`python backend/manage.py shell -c "import seed; seed.run()"` creates:
+
+| Entity | Count | Details |
+|---|---|---|
+| User | 1 | `test@chingtrack.com` / `Test1234!` |
+| Preferences | 1 | KES, 80,000 monthly limit |
+| Categories | 19 | 16 defaults + 3 custom |
+| Transactions | ~45 | 3 months of data with edge cases |
+| Budgets | 9 | Safe/warning/over scenarios |
+| Bills | 12 | Monthly/weekly/once, some paid, overdue, upcoming |
+| Goals | 7 | Completed, on-track, behind, no-deadline, zero-contributions |
+
+---
+
+## 11. Deployment
+
+### Backend (Railway)
+- `DJANGO_SETTINGS_MODULE=config.settings.production`
+- Gunicorn WSGI server
+- Environment variables: `SECRET_KEY`, `DATABASE_URL`, `ALLOWED_HOSTS`, `CORS_ALLOWED_ORIGINS`, `FRONTEND_URL`, email config
+
+### Frontend (Vercel)
+- `pnpm build` → `dist/` output
+- Dev proxy: `/api` → `localhost:8000`
+
+### Docker
+- PostgreSQL 16 via `docker-compose.yml`
+
+---
+
+## 12. Testing
+
+Currently limited to M-Pesa parser unit tests (182 lines, 29 test cases at `backend/apps/transactions/tests/test_mpesa_parser.py`):
+
+- `_extract_amount` — 9 cases (KES with commas, decimals, edge cases)
+- `_extract_ref` — 3 cases (standard, alphanumeric, absent)
+- `_extract_counterparty` — 7 cases (names, XSS sanitization)
+- `_classify` — 5 cases (send, receive, paybill, buy goods, airtime)
+- `parse_mpesa_sms` — 8 cases (full pipeline with valid/invalid/XSS input)
+
+---
+
+## 13. Future Roadmap
 
 ### 13.1 AI Financial Advisor
+- Conversational assistant using user's transaction data
+- Claude/Gemini via tool-calling pattern
+- Requires: LLM API cost, prompt engineering, chat UI
 
-**What:** A conversational assistant that answers questions about the user's finances using their actual transaction data.
-
-**Example interactions:**
-- *"Why did I overspend in March?"* → AI analyses category breakdown
-- *"How much can I safely spend this weekend?"* → AI checks remaining budget + upcoming bills
-- *"Am I on track to hit my savings goal?"* → AI factors in current pace + deadline
-
-**Architecture notes (design for this now):**
-- Keep transaction data structured and queryable — the AI needs clean aggregates, not raw text
-- A `financial_summary` computed view/endpoint will feed context to the LLM
-- Use tool-calling (function calling) pattern: LLM calls internal API functions, not raw SQL
-- Model: Claude or Gemini via API. Wrap in a Django view that assembles context + calls LLM.
-
-**Why not MVP:** Requires LLM API cost, prompt engineering, and a chat UI. Not core to the "log + see" loop.
-
----
-
-### 13.2 Financial Habit Tracking System
-
-**What:** Tracks behavioral patterns over time — not just numbers, but *how* the user manages money.
-
-**Examples:**
-- "You've logged transactions every day for 14 days" (streak)
-- "You tend to overspend on Fridays" (day-of-week pattern)
-- "Your Food spending increases by 30% in the last week of the month" (pattern detection)
-- "You set budgets but rarely check them mid-month" (engagement insight)
-
-**Architecture notes:**
-- Add a `UserHabit` model: `{user, habit_type, streak_count, last_triggered, metadata_json}`
-- Habits are computed by a background task (Celery + Redis) running nightly
-- Store habit snapshots — don't recompute on every request
-- The AI Advisor (13.1) will use habit data as additional context
-
-**Why not MVP:** Requires background task infrastructure (Celery + Redis) and enough historical data (need 60+ days of user behaviour) to be meaningful.
-
----
+### 13.2 Financial Habit Tracking
+- Behavioral pattern detection (streaks, day-of-week trends, engagement)
+- Requires: Celery + Redis for background computation, 60+ days of user data
 
 ### 13.3 Financial Goal Prediction Engine
+- ML model predicting goal achievement probability
+- Upgrade path: linear extrapolation → regression → Monte Carlo simulation
+- Current `is_on_track` field is the seed of this feature
 
-**What:** Uses historical contribution pace + spending patterns to predict whether the user will achieve their savings goals by the deadline — and by how much they're off.
-
-**Examples:**
-- "At your current savings rate, you'll reach your Emergency Fund goal 3 months late"
-- "If you cut Entertainment spending by 20%, you'll hit your goal on time"
-- "There is an 82% probability you'll achieve this goal" (probabilistic model)
-
-**Architecture notes:**
-- Start simple: linear extrapolation from current `total_saved` + `days_remaining`
-- Upgrade to: regression model trained on user's own contribution history
-- Final form: Monte Carlo simulation using spending variance + income variance
-- Expose as a computed field `prediction` on the `SavingsGoal` endpoint — the data model is already set
-- The `is_on_track` boolean on MVP SavingsGoal is the seed of this feature
-
-**Why not MVP:** Requires sufficient historical data and a separate ML/stats service. `is_on_track` in the MVP is the v1 of this feature.
-
----
-
-### 13.4 M-Pesa Integration (Daraja API / SMS Parsing)
-
-**What:** Automatically import M-Pesa transactions instead of manual entry.
-
-**Two approaches:**
-- **SMS Parsing (v2):** User pastes or forwards M-Pesa SMS → regex extracts `{amount, ref, type, counterparty}` → auto-creates Transaction. No business account needed.
-- **Daraja API (v3):** Real-time webhook from Safaricom. Requires registered business/paybill. For when this becomes a SaaS product.
-
-**Architecture notes (already prepared in MVP):**
-- `Transaction.mpesa_ref` and `Transaction.mpesa_raw_sms` fields added in Week 1
-- `CustomUser.mpesa_phone` field added in Week 1
-- A future `POST /api/v1/mpesa/parse-sms/` endpoint will accept raw SMS text and return a pre-filled Transaction object for user confirmation before saving
-
-**Why not MVP:** Parsing accuracy requires testing across all M-Pesa SMS formats (send, receive, buy goods, pay bill, withdraw). Not suitable for a 2-week build.
-
----
+### 13.4 M-Pesa Daraja API Integration
+- Real-time webhook from Safaricom
+- Requires: registered business/paybill account
 
 ### 13.5 Other Deferred Features
 
 | Feature | Notes |
 |---|---|
-| Shared budgets (couples/roommates) | Needs multi-user auth, invite system, permission model |
-| Mobile app (React Native / Flutter) | JWT auth is already mobile-ready. Add push notifications. |
-| PDF / CSV export | Add after data export (GDPR endpoint) is proven |
-| Investment tracking | New asset class. Separate `Portfolio` + `AssetHolding` models. |
-| Tax reporting (KRA) | Requires understanding of Kenya tax brackets. Post-product-market fit. |
-| Multi-device offline sync | PWA + IndexedDB + sync protocol. Major complexity. |
-| Recurring transaction auto-creation | Celery beat task. Simple to add once background tasks exist. |
+| Shared budgets (couples/roommates) | Multi-user auth, invite system, permission model |
+| Mobile app | JWT ready; needs push notifications |
+| PDF / CSV export | Add after GDPR export is proven |
+| Investment tracking | New `Portfolio` + `AssetHolding` models |
+| Tax reporting (KRA) | Requires Kenya tax bracket logic |
+| Offline-first PWA | IndexedDB + sync protocol |
+| Recurring transaction auto-creation | Celery beat task |
+| Notifications / reminders | Email or in-app bill/goal reminders |
 

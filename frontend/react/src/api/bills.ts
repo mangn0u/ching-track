@@ -1,9 +1,16 @@
 import { apiFetch, apiPost, apiPut, apiDelete } from "./client";
 import type { Bill, BillFormData, BillPayment, PayBillData } from "../types/bill";
 
+function unwrapResults<T>(data: unknown): T[] {
+  if (data && typeof data === "object" && "results" in data) {
+    return (data as { results: T[] }).results;
+  }
+  return data as T[];
+}
+
 export function fetchBills(active?: boolean): Promise<Bill[]> {
   const qs = active !== undefined ? `?active=${active}` : "";
-  return apiFetch<Bill[]>(`/api/v1/bills/${qs}`);
+  return apiFetch<unknown>(`/api/v1/bills/${qs}`).then(unwrapResults<Bill>);
 }
 
 export function createBill(data: BillFormData): Promise<Bill> {

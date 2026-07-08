@@ -4,7 +4,14 @@ import type { CategoryFormData } from "../types/category";
 
 export function fetchCategories(type?: string): Promise<Category[]> {
   const qs = type ? `?type=${type}` : "";
-  return apiFetch<Category[]>(`/api/v1/categories/${qs}`);
+  return apiFetch<unknown>(`/api/v1/categories/${qs}`).then(unwrapResults<Category>);
+}
+
+function unwrapResults<T>(data: unknown): T[] {
+  if (data && typeof data === "object" && "results" in data) {
+    return (data as { results: T[] }).results;
+  }
+  return data as T[];
 }
 
 export function createCategory(data: CategoryFormData): Promise<Category> {

@@ -1,8 +1,15 @@
 import { apiFetch, apiPost, apiPut, apiDelete } from "./client";
 import type { Goal, GoalFormData, GoalContribution, ContributionFormData } from "../types/goal";
 
+function unwrapResults<T>(data: unknown): T[] {
+  if (data && typeof data === "object" && "results" in data) {
+    return (data as { results: T[] }).results;
+  }
+  return data as T[];
+}
+
 export function fetchGoals(): Promise<Goal[]> {
-  return apiFetch<Goal[]>("/api/v1/goals/");
+  return apiFetch<unknown>("/api/v1/goals/").then(unwrapResults<Goal>);
 }
 
 export function createGoal(data: GoalFormData): Promise<Goal> {
@@ -30,5 +37,5 @@ export function contributeToGoal(id: number, data: ContributionFormData): Promis
 }
 
 export function fetchContributions(goalId: number): Promise<GoalContribution[]> {
-  return apiFetch<GoalContribution[]>(`/api/v1/goals/${goalId}/contributions/`);
+  return apiFetch<unknown>(`/api/v1/goals/${goalId}/contributions/`).then(unwrapResults<GoalContribution>);
 }

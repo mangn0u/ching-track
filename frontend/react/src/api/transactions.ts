@@ -1,6 +1,15 @@
 import { apiFetch, apiPost, apiPut, apiDelete } from "./client";
 import type { Transaction, TransactionDetail, TransactionFormData, TransactionFilters, TransactionSummary } from "../types/transaction";
 
+// The backend returns paginated responses: { count, next, previous, results: T[] }
+// This helper unwraps the results array.
+function unwrapResults<T>(data: unknown): T[] {
+  if (data && typeof data === "object" && "results" in data) {
+    return (data as { results: T[] }).results;
+  }
+  return data as T[];
+}
+
 export function fetchTransactions(filters?: TransactionFilters): Promise<Transaction[]> {
   const params = new URLSearchParams();
   if (filters?.month) params.set("month", String(filters.month));
@@ -9,7 +18,7 @@ export function fetchTransactions(filters?: TransactionFilters): Promise<Transac
   if (filters?.category) params.set("category", String(filters.category));
   if (filters?.currency) params.set("currency", filters.currency);
   const qs = params.toString();
-  return apiFetch<Transaction[]>(`/api/v1/transactions/${qs ? `?${qs}` : ""}`);
+  return apiFetch<unknown>(`/api/v1/transactions/${qs ? `?${qs}` : ""}`).then(unwrapResults<Transaction>);
 }
 
 export function fetchTransaction(id: number): Promise<TransactionDetail> {
