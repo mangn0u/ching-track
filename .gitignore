@@ -20,6 +20,7 @@ SECURITY.md
 frontend/react/logging_guide.md
 frontend/react/frontend_reports_feature.md
 dev_errors_log.md
+GITHUB_ACTIONS_GUIDE.md
 backend/seed.py
 
 

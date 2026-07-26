@@ -41,16 +41,8 @@ jobs:
         with:
           enable-cache: true
 
-      - name: Install Python 3.13
-        run: uv python install 3.13
-
-      - name: Create venv 
-        working-directory: backend
-        run: uv venv
-        
       - name: Install dependencies
-        working-directory: backend
-        run: uv pip install --python .venv/bin/python -r /backend/requirements/development.txt
+        run: uv sync --group dev
 
       - name: Run migrations
         run: uv run backend/manage.py migrate
