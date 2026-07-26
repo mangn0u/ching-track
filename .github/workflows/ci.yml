@@ -45,16 +45,13 @@ jobs:
         run: uv python install 3.13
 
       - name: Create venv and install deps
-        run: uv venv && uv pip install -r requirements/development.txt
-        working-directory: backend
+        run: uv venv && uv pip install -r backend/requirements/development.txt
 
       - name: Run migrations
-        run: uv run manage.py migrate
-        working-directory: backend
+        run: uv run backend/manage.py migrate
 
       - name: Run tests
-        run: uv run manage.py test --verbosity=2
-        working-directory: backend
+        run: uv run backend/manage.py test --verbosity=2
 
   frontend:
     runs-on: ubuntu-latest
