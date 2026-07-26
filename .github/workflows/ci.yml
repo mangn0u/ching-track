@@ -43,6 +43,9 @@ jobs:
           python-version: "3.13"
           cache: false
 
+      - name: Ensure pip cache dir exists
+        run: mkdir -p ~/.cache/pip
+
       - name: Install uv
         uses: astral-sh/setup-uv@v6
 
