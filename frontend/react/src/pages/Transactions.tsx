@@ -84,8 +84,6 @@ export default function Transactions() {
       setShowModal(false);
       setEditing(null);
       load();
-    } catch (e) {
-      throw e;
     } finally {
       setSaving(false);
     }
