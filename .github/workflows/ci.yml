@@ -45,11 +45,10 @@ jobs:
         run: uv python install 3.13
 
       - name: Create venv and install deps
-        working-directory: backend
         run: |
           uv venv
           source .venv/bin/activate
-          uv pip install -r requirements/development.txt
+          uv pip install -r /backend/requirements/development.txt
 
       - name: Run migrations
         run: uv run backend/manage.py migrate
