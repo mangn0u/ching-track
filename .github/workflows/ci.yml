@@ -49,7 +49,7 @@ jobs:
         run: |
           uv venv
           source .venv/bin/activate
-          uv pip install -r backend/requirements/development.txt
+          uv pip install -r requirements/development.txt
 
       - name: Run migrations
         run: uv run backend/manage.py migrate
