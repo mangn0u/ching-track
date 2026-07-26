@@ -44,11 +44,13 @@ jobs:
       - name: Install Python 3.13
         run: uv python install 3.13
 
-      - name: Create venv and install deps
-        run: |
-          uv venv
-          source .venv/bin/activate
-          uv pip install -r /backend/requirements/development.txt
+      - name: Create venv 
+        working-directory: backend
+        run: uv venv
+        
+      - name: Install dependencies
+        working-directory: backend
+        run: uv pip install --python .venv/bin/python -r /backend/requirements/development.txt
 
       - name: Run migrations
         run: uv run backend/manage.py migrate
