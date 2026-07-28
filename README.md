@@ -86,7 +86,7 @@ ching-track/
 ### 1. Clone and configure
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/mangn0u/ching-track.git
 cd ching-track
 cp .env.example .env
 # Edit .env with your SECRET_KEY and other values
